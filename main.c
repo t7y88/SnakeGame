@@ -1,8 +1,6 @@
 #include "gpio.h"
 #include "uart.h"
 #include "framebuffer.h"
-#include "monkey.h"
-#include "snakeMenu.h"
 #include "snakeHeadRight.h"
 #include "title.h"
 #include "challenge1.h"
@@ -149,7 +147,12 @@ void makingGrid(){
             if(i==0 || j==0 || i==31 || j==23){
                 drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0x964B00, 1);
             }
-            if((i==10 && (j<8 && j>0)) || ((i>0 && i<7) && j==6) || (i==4 && (j<10 && j>6)) || ((i>0 && i<17) && j==13) || (i==13 && (j<13 && j>7))){
+            //vertical walls
+            if((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4))){
+                drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0x964B00, 1);
+            }
+            //horizontal walls
+            if(((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7)){
                 drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0x964B00, 1);
             }
             //highlighting start and finish
