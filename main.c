@@ -96,26 +96,49 @@ int READ_SNES(){
     return out;
  }
 
-int mainMenu(int input){
-    if (input == 8) {
-        drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, 512, 350);
-        drawRect(168, 350, 168 + snakeHeadRight.width, 350 + snakeHeadRight.height, cyan, 1); //left
-        drawRect(439, 400, 439 + snakeHeadRight.width, 400 + snakeHeadRight.height, cyan, 1); //down
-        return 2;
+int READ_INPUT(){
+    // B Y SL ST UP DOWN LEFT RIGHT A  X  L  R
+    // 1 2 3  4  5  6    7    8     9 10 11 12
+    int i = 0;
+    int y = 1;
+    while(i == 0) i = READ_SNES();
+    while(y != 0) y = READ_SNES();
+    return i;
+}
+
+int mainMenu(){
+    fillScreen(cyan);
+    drawImage(title.pixel_data, title.width, title.height, 384, 150);
+    drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, 168, 350);
+    drawImage(challenge1.pixel_data, challenge1.width, challenge1.height, 240, 350);
+    drawImage(challenge2.pixel_data, challenge2.width, challenge2.height, 584, 350);
+    drawImage(quit.pixel_data, quit.width, quit.height, 511, 400);
+    int selected = 1;
+    while(1){
+        int input = READ_INPUT();
+        if (input == 8) {
+            drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, 512, 350);
+            drawRect(168, 350, 168 + snakeHeadRight.width, 350 + snakeHeadRight.height, cyan, 1); //left
+            drawRect(439, 400, 439 + snakeHeadRight.width, 400 + snakeHeadRight.height, cyan, 1); //down
+            selected = 2;
         }
-    if (input == 7) {
-        drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, 168, 350);
-        drawRect(439, 400, 439 + snakeHeadRight.width, 400 + snakeHeadRight.height, cyan, 1); //down
-        drawRect(512, 350, 512 + snakeHeadRight.width, 350 + snakeHeadRight.height, cyan, 1); //right
-        return 1;
+        if (input == 7) {
+            drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, 168, 350);
+            drawRect(439, 400, 439 + snakeHeadRight.width, 400 + snakeHeadRight.height, cyan, 1); //down
+            drawRect(512, 350, 512 + snakeHeadRight.width, 350 + snakeHeadRight.height, cyan, 1); //right
+            selected = 1;
+        }
+        if (input == 6) {
+            drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, 439, 400);
+            drawRect(168, 350, 168 + snakeHeadRight.width, 350 + snakeHeadRight.height, cyan, 1); //left
+            drawRect(512, 350, 512 + snakeHeadRight.width, 350 + snakeHeadRight.height, cyan, 1); //right
+            selected = 3;
+        }
+        if (input == 9) {
+            return selected;
+        }
     }
-    if (input == 6) {
-        drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, 439, 400);
-        drawRect(168, 350, 168 + snakeHeadRight.width, 350 + snakeHeadRight.height, cyan, 1); //left
-        drawRect(512, 350, 512 + snakeHeadRight.width, 350 + snakeHeadRight.height, cyan, 1); //right
-        return 0;
-    }
-    return 4;
+    
 }
 
 
@@ -147,42 +170,38 @@ void makingGrid(){
         }
     }
 }
+
+void challengeOne(){
+    fillScreen(0x0);
+    makingGrid();
+    int input;
+    while(1){
+        input = READ_INPUT();
+        if (input == 3){
+            return;
+        }
+    }
+}
 int main()
-{
-    init_framebuffer(); // You can use framebuffer, width, height and pitch variables available in framebuffer.h
+{   
+    // You can use framebuffer, width, height and pitch variables available in framebuffer.h
     // Draw a (Green) pixel at coordinates (10,10)
     //drawPixel(10,10,0xFF00FF00);
-
-    fillScreen(cyan);
     //void drawRect(x, x, y, y, color, fill);
     // 0,0 to 1023, 767 from the top left corner
-    drawImage(title.pixel_data, title.width, title.height, 384, 150);
-    drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, 168, 350);
-    drawImage(challenge1.pixel_data, challenge1.width, challenge1.height, 240, 350);
-    drawImage(challenge2.pixel_data, challenge2.width, challenge2.height, 584, 350);
-    drawImage(quit.pixel_data, quit.width, quit.height, 511, 400);
+    init_framebuffer();
+
     Init_GPIO();
-    // i regesters button
-    // B Y SL ST UP DOWN LEFT RIGHT A  X  L  R
-    // 1 2 3  4  5  6    7    8     9 10 11 12
-    int i = 0;
-    // y regesters when a button stops being pressed
-    int y = 0;
-    int select = 1;
+    int selected;
     while(1){
-        i = 0;
-        y = 1;
-        while(i == 0) i = READ_SNES();
-        while(y != 0) y = READ_SNES();
-        select = mainMenu(i);
-        if (select == 9) {
-            fillScreen(0x0);
-            makingGrid();
-
+        selected = mainMenu();
+        if (selected == 1){
+            challengeOne();
         }
-
-        wait(150000);
+        if (selected == 3) {
+            fillScreen(0x0);
+            break;
+        }
     }
-    
     return 0;
 }
