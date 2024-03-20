@@ -6,6 +6,9 @@
 #include "challenge1.h"
 #include "challenge2.h"
 #include "quit.h"
+#include "heart.h" 
+#include "key.h" 
+#include "SnakeHead.h"
 
 // Regesters
 #define CLO_REG 0xFE003004
@@ -28,6 +31,9 @@ static unsigned *gpio = (unsigned*)GPIO_BASE; // GPIO base
 // Setup global variables
 unsigned *clo = (unsigned* ) CLO_REG;
 int buttons[16];
+int heartBuffer[5] = {1,1,1,1,0};
+int keyBuffer[3] = {0,0,0};
+int snakeBuffer[2][4] = {{2,2}, {1,2}, {1,1}, {2,1}}; 
 
 void printf(char *str) {
 	uart_puts(str);
@@ -139,7 +145,6 @@ int mainMenu(){
     
 }
 
-
 void makingGrid(){
     for (int i= 0; i<32; i++){
         for (int j=0; j<24; j++){
@@ -155,8 +160,22 @@ void makingGrid(){
             if(((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7)){
                 drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0x964B00, 1);
             }
-            //highlighting start and finish
-            if ((i==1 && j==1)  || (i==30 && j==22)){
+            //drawing the Snake head
+            if(i==1 && j==1){
+                drawImage(SnakeHead.pixel_data, SnakeHead.width, SnakeHead.height, i*32, j*32);
+            }
+            //making hearts
+            if ((i==26 && j==13) || (i==5 && j==16) ){
+                drawImage(heart.pixel_data, heart.width, heart.height, i*32, j*32);
+                //**Update Heart Buffer
+            }
+            // making keys
+            if ((i==23 && j==2) || (i==3 && j==20) || (i==2 && j==8)){
+                drawImage(key.pixel_data, key.width, key.height, i*32, j*32);
+                //**Update Key Buffer
+            }
+            //highlighting finish
+            if ((i==30 && j==22)){
                 drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0xFF00, 1);
             }
             // make grid for the rest of the space
