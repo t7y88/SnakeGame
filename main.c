@@ -1,6 +1,8 @@
 #include "gpio.h"
 #include "uart.h"
 #include "framebuffer.h"
+#include "monkey.h"
+#include "snakeMenu.h"
 #include "snakeHeadRight.h"
 #include "title.h"
 #include "challenge1.h"
@@ -21,6 +23,9 @@ static unsigned *gpio = (unsigned*)GPIO_BASE; // GPIO base
 #define CLK 11
 #define LAT 9
 #define DAT 10
+
+// Color
+#define cyan 0x7FFFFF
 
 // Setup global variables
 unsigned *clo = (unsigned* ) CLO_REG;
@@ -91,41 +96,27 @@ int READ_SNES(){
     return out;
  }
 
-
-int main()
-{
-    init_framebuffer(); // You can use framebuffer, width, height and pitch variables available in framebuffer.h
-    // Draw a (Green) pixel at coordinates (10,10)
-    //drawPixel(10,10,0xFF00FF00);
-    fillScreen(0x00);
-    //void drawRect(x, x, y, y, color, fill);
-    // 0,0 to 1023, 767 from the top left corner
-    // drawImage(title.pixel_data, title.width, title.height, 384, 150);
-    // drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, 168, 350);
-    // drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, 512, 350);
-    // drawImage(challenge1.pixel_data, challenge1.width, challenge1.height, 240, 350);
-    // drawImage(challenge2.pixel_data, challenge2.width, challenge2.height, 584, 350);
-    Init_GPIO();
-    // i regesters button
-    // 
-    int i = 0;
-    // y regesters when a button stops being pressed
-    int y = 0;
-    while(1){
-        i = 0;
-        y = 1;
-        while(i == 0) i = READ_SNES();
-        while(y != 0) y = READ_SNES();
-        if (i == 1) {
-            //drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, 512, 350);
-            makingGrid();
+int mainMenu(int input){
+    if (input == 8) {
+        drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, 512, 350);
+        drawRect(168, 350, 168 + snakeHeadRight.width, 350 + snakeHeadRight.height, cyan, 1); //left
+        drawRect(439, 400, 439 + snakeHeadRight.width, 400 + snakeHeadRight.height, cyan, 1); //down
+        return 2;
         }
-        wait(150000);
+    if (input == 7) {
+        drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, 168, 350);
+        drawRect(439, 400, 439 + snakeHeadRight.width, 400 + snakeHeadRight.height, cyan, 1); //down
+        drawRect(512, 350, 512 + snakeHeadRight.width, 350 + snakeHeadRight.height, cyan, 1); //right
+        return 1;
     }
-    
-    return 0;
+    if (input == 6) {
+        drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, 439, 400);
+        drawRect(168, 350, 168 + snakeHeadRight.width, 350 + snakeHeadRight.height, cyan, 1); //left
+        drawRect(512, 350, 512 + snakeHeadRight.width, 350 + snakeHeadRight.height, cyan, 1); //right
+        return 0;
+    }
+    return 4;
 }
-
 
 
 void makingGrid(){
@@ -155,4 +146,43 @@ void makingGrid(){
             }
         }
     }
+}
+int main()
+{
+    init_framebuffer(); // You can use framebuffer, width, height and pitch variables available in framebuffer.h
+    // Draw a (Green) pixel at coordinates (10,10)
+    //drawPixel(10,10,0xFF00FF00);
+
+    fillScreen(cyan);
+    //void drawRect(x, x, y, y, color, fill);
+    // 0,0 to 1023, 767 from the top left corner
+    drawImage(title.pixel_data, title.width, title.height, 384, 150);
+    drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, 168, 350);
+    drawImage(challenge1.pixel_data, challenge1.width, challenge1.height, 240, 350);
+    drawImage(challenge2.pixel_data, challenge2.width, challenge2.height, 584, 350);
+    drawImage(quit.pixel_data, quit.width, quit.height, 511, 400);
+    Init_GPIO();
+    // i regesters button
+    // B Y SL ST UP DOWN LEFT RIGHT A  X  L  R
+    // 1 2 3  4  5  6    7    8     9 10 11 12
+    int i = 0;
+    // y regesters when a button stops being pressed
+    int y = 0;
+    int select = 1;
+    while(1){
+        i = 0;
+        y = 1;
+        while(i == 0) i = READ_SNES();
+        while(y != 0) y = READ_SNES();
+        select = mainMenu(i);
+        if (select == 9) {
+            fillScreen(0x0);
+            makingGrid();
+
+        }
+
+        wait(150000);
+    }
+    
+    return 0;
 }
