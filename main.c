@@ -12,7 +12,7 @@
 #include "bomb.h"
 #include <stdbool.h>
 #include <stdio.h> 
-#include <stdlib.h> 
+#include <stdlib.h>
 
 // Regesters
 #define CLO_REG 0xFE003004
@@ -36,8 +36,8 @@ static unsigned *gpio = (unsigned*)GPIO_BASE; // GPIO base
 unsigned *clo = (unsigned* ) CLO_REG;
 int heartBuffer[5][2];
 int keyBuffer[3][2];
-int bomb1buffer[6][2]; 
-int bomb2buffer[6][2];
+int bombbuffer[3][2] = {{6,2}, {11,16}, {17,10}}; 
+int bombclearing[3][2];
 
 void printf1(char *str) {
 	uart_puts(str);
@@ -169,17 +169,11 @@ void makingGrid(){
                 drawingSnake(i, j);
             }
             if (i==6 && j==2){
-                int r1 = rand()%3;
-                int r2 = rand()%3;
-                drawImage(bomb.pixel_data, bomb.width, bomb.height, (i+r1)*32, (j+r2)*32);
+                drawingBomb(i ,j, 0);
             }else if (i==11 && j==16){
-                int r1 = rand()%4;
-                int r2 = rand()%4;
-                drawImage(bomb.pixel_data, bomb.width, bomb.height, (i+r1)*32, (j+r2)*32);    
+                drawingBomb(i ,j, 1);
             }else if (i==17 && j==10){
-                int r1 = rand()%5;
-                int r2 = rand()%5;
-                drawImage(bomb.pixel_data, bomb.width, bomb.height, (i+r1)*32, (j+r2)*32);    
+                drawingBomb(i ,j, 2);
             }
             //making hearts
             if ((i==26 && j==13) || (i==5 && j==16) ){
@@ -214,8 +208,18 @@ void drawingSnake(int x, int y){
     drawImage(SnakeHead.pixel_data, SnakeHead.width, SnakeHead.height, x*32+1, y*32+1);
 }
 
-void clearingSnake(int x, int y){
+void clearingSquare(int x, int y){
     drawRect(x*32+1, y*32+1, (x+1)*32-1, (y+1)*32-1, 0x00, 1);
+}
+
+void drawingBomb(int i, int j, int n){
+    clearingSquare(i,j);
+    int r1 = *clo%3;
+    int r2 = *clo%3;
+    // updating the new bomb
+    bombclearing[n][0] = bombbuffer[n][0] + r1;
+    bombclearing[n][1] = bombbuffer[n][1] + r2;   
+    drawImage(bomb.pixel_data, bomb.width, bomb.height, (bombclearing[n][0])*32, (bombclearing[n][1])*32);
 }
 
 void challengeOne(){
@@ -225,6 +229,7 @@ void challengeOne(){
     fillScreen(0x0);
     makingGrid();
     int input;
+    int num = 0;
     while(1){
         input = READ_INPUT();
         if (input == 3){
@@ -236,7 +241,7 @@ void challengeOne(){
                 
                 // Hard coded the conditions so the snake doesnt go through the walls
                 if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
-                    clearingSnake(snakeX, snakeY);
+                    clearingSquare(snakeX, snakeY);
                     snakeX++;
                     drawingSnake(snakeX,snakeY);
                 }
@@ -246,7 +251,7 @@ void challengeOne(){
                 int i = snakeX-1;
                 int j = snakeY;
                 if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
-                    clearingSnake(snakeX, snakeY);
+                    clearingSquare(snakeX, snakeY);
                     snakeX--;
                     drawingSnake(snakeX,snakeY);
                 }
@@ -256,7 +261,7 @@ void challengeOne(){
                 int i = snakeX;
                 int j = snakeY+1;
                 if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
-                    clearingSnake(snakeX, snakeY);
+                    clearingSquare(snakeX, snakeY);
                     snakeY++;
                     drawingSnake(snakeX,snakeY);
                 }
@@ -266,13 +271,17 @@ void challengeOne(){
                 int i = snakeX;
                 int j = snakeY-1;
                 if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
-                    clearingSnake(snakeX, snakeY);
+                    clearingSquare(snakeX, snakeY);
                     snakeY--;
                     drawingSnake(snakeX,snakeY);
                 }
             }
         }
-
+        if (*clo % 17){             // Need a better soltuion for the spawning!!!!
+            drawingBomb(bombclearing[0][0], bombclearing[0][1], 0);
+            drawingBomb(bombclearing[1][0], bombclearing[1][1], 1);
+            drawingBomb(bombclearing[2][0], bombclearing[2][1], 2);
+        }
     }
 }
 int main()
