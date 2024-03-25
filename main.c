@@ -9,6 +9,10 @@
 #include "heart.h" 
 #include "key.h" 
 #include "SnakeHead.h"
+#include "bomb.h"
+#include <stdbool.h>
+#include <stdio.h> 
+#include <stdlib.h> 
 
 // Regesters
 #define CLO_REG 0xFE003004
@@ -30,14 +34,12 @@ static unsigned *gpio = (unsigned*)GPIO_BASE; // GPIO base
 
 // Setup global variables
 unsigned *clo = (unsigned* ) CLO_REG;
-int heartBuffer[5] = {1,1,1,1,0};
-int keyBuffer[3] = {0,0,0};
-int snakeBuffer[2][4] = {{2,2}, {1,2}, {1,1}, {2,1}}; 
-// int wallBuffer[2][]
-int bomb1buffer[2][6];
-int bomb2buffer[2][6];
+int heartBuffer[5][2];
+int keyBuffer[3][2];
+int bomb1buffer[6][2]; 
+int bomb2buffer[6][2];
 
-void printf(char *str) {
+void printf1(char *str) {
 	uart_puts(str);
 }
 
@@ -166,6 +168,19 @@ void makingGrid(){
             if(i==1 && j==1){
                 drawingSnake(i, j);
             }
+            if (i==6 && j==2){
+                int r1 = rand()%3;
+                int r2 = rand()%3;
+                drawImage(bomb.pixel_data, bomb.width, bomb.height, (i+r1)*32, (j+r2)*32);
+            }else if (i==11 && j==16){
+                int r1 = rand()%4;
+                int r2 = rand()%4;
+                drawImage(bomb.pixel_data, bomb.width, bomb.height, (i+r1)*32, (j+r2)*32);    
+            }else if (i==17 && j==10){
+                int r1 = rand()%5;
+                int r2 = rand()%5;
+                drawImage(bomb.pixel_data, bomb.width, bomb.height, (i+r1)*32, (j+r2)*32);    
+            }
             //making hearts
             if ((i==26 && j==13) || (i==5 && j==16) ){
                 drawImage(heart.pixel_data, heart.width, heart.height, i*32, j*32);
@@ -257,6 +272,7 @@ void challengeOne(){
                 }
             }
         }
+
     }
 }
 int main()
