@@ -30,10 +30,12 @@ static unsigned *gpio = (unsigned*)GPIO_BASE; // GPIO base
 
 // Setup global variables
 unsigned *clo = (unsigned* ) CLO_REG;
-int buttons[16];
 int heartBuffer[5] = {1,1,1,1,0};
 int keyBuffer[3] = {0,0,0};
 int snakeBuffer[2][4] = {{2,2}, {1,2}, {1,1}, {2,1}}; 
+// int wallBuffer[2][]
+int bomb1buffer[2][6];
+int bomb2buffer[2][6];
 
 void printf(char *str) {
 	uart_puts(str);
@@ -162,7 +164,7 @@ void makingGrid(){
             }
             //drawing the Snake head
             if(i==1 && j==1){
-                drawImage(SnakeHead.pixel_data, SnakeHead.width, SnakeHead.height, i*32, j*32);
+                drawingSnake(i, j);
             }
             //making hearts
             if ((i==26 && j==13) || (i==5 && j==16) ){
@@ -176,7 +178,7 @@ void makingGrid(){
             }
             //highlighting finish
             if ((i==30 && j==22)){
-                drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0xFF00, 1);
+                drawRect(i*32+1, j*32+1, (i+1)*32-1, (j+1)*32-1, 0xFF00, 1);
             }
             // make grid for the rest of the space
             else{
@@ -193,7 +195,18 @@ void makingGrid(){
     }
 }
 
+void drawingSnake(int x, int y){
+    drawImage(SnakeHead.pixel_data, SnakeHead.width, SnakeHead.height, x*32+1, y*32+1);
+}
+
+void clearingSnake(int x, int y){
+    drawRect(x*32+1, y*32+1, (x+1)*32-1, (y+1)*32-1, 0x00, 1);
+}
+
 void challengeOne(){
+
+    int snakeX = 1;
+    int snakeY = 1; 
     fillScreen(0x0);
     makingGrid();
     int input;
@@ -201,6 +214,48 @@ void challengeOne(){
         input = READ_INPUT();
         if (input == 3){
             return;
+        }else if (input == 8){
+            if (snakeX<30){
+                int i = snakeX+1;
+                int j = snakeY;
+                
+                // Hard coded the conditions so the snake doesnt go through the walls
+                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
+                    clearingSnake(snakeX, snakeY);
+                    snakeX++;
+                    drawingSnake(snakeX,snakeY);
+                }
+            }
+        }else if (input == 7){
+            if (snakeX>1){
+                int i = snakeX-1;
+                int j = snakeY;
+                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
+                    clearingSnake(snakeX, snakeY);
+                    snakeX--;
+                    drawingSnake(snakeX,snakeY);
+                }
+            }
+        }else if (input == 6){
+            if (snakeY<22){
+                int i = snakeX;
+                int j = snakeY+1;
+                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
+                    clearingSnake(snakeX, snakeY);
+                    snakeY++;
+                    drawingSnake(snakeX,snakeY);
+                }
+            }
+        }else if (input == 5){
+            if (snakeY>1 ){
+                int i = snakeX;
+                int j = snakeY-1;
+                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
+                    clearingSnake(snakeX, snakeY);
+                    snakeY--;
+                    drawingSnake(snakeX,snakeY);
+                }
+            }
         }
     }
 }
