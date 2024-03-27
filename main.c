@@ -132,6 +132,9 @@ int READ_INPUT(){
 #define snakeXMid resolutionWidth/2 - title.width/2 + title.width/6 - snakeHeadRight.width
 #define snakeYMid resolutionHight/2
 #define snakeYDown 3 * resolutionHight/4
+
+
+
 int mainMenu(){
     fillScreen(cyan);
     drawImage(title.pixel_data, title.width, title.height, resolutionWidth/2 - title.width/2, resolutionHight/4);
@@ -172,13 +175,10 @@ int mainMenu(){
 
 void challengeOne(){
 
-    int snakeX = 1;
-    int snakeY = 1; 
     fillScreen(0x0);
     makingGrid();
     trackScore();
     int input;
-    int num = 0;
 
     while(1){ 
         
@@ -294,6 +294,7 @@ void checkKeys(){
     for (int i=0; i<3; i++){
         if ((snakeBuffer[0] == keyBuffer[i][0]) && (snakeBuffer[1] == keyBuffer[i][1])){
             keys++;
+            // sets this key at an unreachable postion
             keyBuffer[i][0] = 0;
             keyBuffer[i][1] = 0;
         }
@@ -305,6 +306,7 @@ void checkHearts(){
     for (int i=0; i<2; i++){
         if ((snakeBuffer[0] == heartBuffer[i][0]) && (snakeBuffer[1] == heartBuffer[i][1])){
             hearts++;
+            // sets this heart at an unreachable postion
             heartBuffer[i][0] = 0;
             heartBuffer[i][1] = 0;  
         }
@@ -434,6 +436,115 @@ void updateBomb(int n) {
 }
 
 
+abuffer[4][2] = {{0,20}, {0,21},{0,22}, {0,23}};
+
+void challengeTwo(){
+    
+    fillScreen(0x0);
+    makingGrid2();
+    int input;
+
+    while(1){ 
+        
+        input = READ_INPUT();
+        if (input == 3){
+            return;
+        }else if (input==8){
+            if (abuffer[0][0]<39){
+                int j = abuffer[0][1];
+                int i = abuffer[0][0]+1;
+                clearingSand(abuffer[3][0], abuffer[3][1]);
+                abuffer[3][1] = abuffer[2][1];
+                abuffer[3][0] = abuffer[2][0];
+                abuffer[2][1] = abuffer[1][1];
+                abuffer[2][0] = abuffer[1][0];
+                abuffer[1][1] = abuffer[0][1];
+                abuffer[1][0] = abuffer[0][0];
+                abuffer[0][1] = j;
+                abuffer[0][0] = i;
+                drawingAnaconda(i,j);
+            }
+        }else if (input==7){
+            if (abuffer[0][0]>0){
+                int j = abuffer[0][1];
+                int i = abuffer[0][0]-1;
+                clearingSand(abuffer[3][0], abuffer[3][1]);
+                abuffer[3][1] = abuffer[2][1];
+                abuffer[3][0] = abuffer[2][0];
+                abuffer[2][1] = abuffer[1][1];
+                abuffer[2][0] = abuffer[1][0];
+                abuffer[1][1] = abuffer[0][1];
+                abuffer[1][0] = abuffer[0][0];
+                abuffer[0][1] = j;
+                abuffer[0][0] = i;
+                drawingAnaconda(i,j);
+            }
+        }else if (input==6){
+            if (abuffer[0][1]<23){
+                int j = abuffer[0][1]+1;
+                int i = abuffer[0][0];
+                clearingSand(abuffer[3][0], abuffer[3][1]);
+                abuffer[3][1] = abuffer[2][1];
+                abuffer[3][0] = abuffer[2][0];
+                abuffer[2][1] = abuffer[1][1];
+                abuffer[2][0] = abuffer[1][0];
+                abuffer[1][1] = abuffer[0][1];
+                abuffer[1][0] = abuffer[0][0];
+                abuffer[0][1] = j;
+                abuffer[0][0] = i;
+                drawingAnaconda(i,j);
+            }
+        }else if (input==5){
+            if (abuffer[0][1]>6){
+                int j = abuffer[0][1]-1;
+                int i = abuffer[0][0];
+                clearingSand(abuffer[3][0], abuffer[3][1]);
+                abuffer[3][1] = abuffer[2][1];
+                abuffer[3][0] = abuffer[2][0];
+                abuffer[2][1] = abuffer[1][1];
+                abuffer[2][0] = abuffer[1][0];
+                abuffer[1][1] = abuffer[0][1];
+                abuffer[1][0] = abuffer[0][0];
+                abuffer[0][1] = j;
+                abuffer[0][0] = i;
+                drawingAnaconda(i,j);
+            }
+        }
+    }
+}
+
+void makingGrid2(){
+    for (int i= 0; i<40; i++){
+        for (int j=6; j<24; j++){
+            if ((i == abuffer[0][0] && j == abuffer[0][1]) || (i == abuffer[1][0] && j == abuffer[1][1]) || (i == abuffer[2][0] && j == abuffer[2][1]) || (i == abuffer[3][0] && j == abuffer[3][1])){
+                drawingAnaconda(i, j);
+            }else{
+                clearingSand(i,j);
+            }
+            if ((i==6 && j==20) || (i==12 && j==8) || (i==23 && j==18) || (i==2 && j==8) || (i==37 && j==6)){
+                //drawingTrees(i,j);
+            }else if (i==33 && j==20){
+                //drwaingPond(i,j);
+            }
+            drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0x0, 0);
+        }
+    }
+}
+
+void clearingSand(int i, int j){
+    drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0xFDFD96, 1);
+}
+
+void drawingAnaconda(int i, int j){
+
+    if (i == abuffer[0][0] && j == abuffer[0][1]){
+        drawRect((abuffer[0][0])*32, (abuffer[0][1])*32, ((abuffer[0][0])+1)*32, ((abuffer[0][1])+1)*32, 0x0, 1);
+        drawRect((abuffer[1][0])*32, (abuffer[1][1])*32, ((abuffer[1][0])+1)*32, ((abuffer[1][1])+1)*32, 0x0, 1);
+        drawRect((abuffer[2][0])*32, (abuffer[2][1])*32, ((abuffer[2][0])+1)*32, ((abuffer[2][1])+1)*32, 0x0, 1);
+        drawRect((abuffer[3][0])*32, (abuffer[3][1])*32, ((abuffer[3][0])+1)*32, ((abuffer[3][1])+1)*32, 0x0, 1);
+    }
+}
+
 int main()
 {   
     // You can use framebuffer, width, height and pitch variables available in framebuffer.h
@@ -448,7 +559,10 @@ int main()
     while(1){
         selected = mainMenu();
         if (selected == 1){
-            challengeOne();
+           challengeOne();
+        }
+        if (selected ==2){
+            challengeTwo();
         }
         if (selected == 3) {
             fillScreen(0x0);
