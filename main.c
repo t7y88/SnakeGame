@@ -43,10 +43,13 @@ static unsigned *gpio = (unsigned*)GPIO_BASE; // GPIO base
 // Setup global variables
 unsigned *clo = (unsigned* ) CLO_REG;
 // [id][xCoordinate, yCoordinate, Timer]
-int heartBuffer[5][2];
-int keyBuffer[3][2];
+int snakeBuffer[1] = {1,1};
+int heartBuffer[2][2] = {{26,13}, {5,16}};
+int keyBuffer[3][2] = {{2,8}, {23,2}, {3,20}};
 int bombbuffer[3][2] = {{6,2}, {11,16}, {17,10}}; 
 int bombclearing[3][3];
+int keys = 0;
+int hearts = 3;
 
 void printf1(char *str) {
 	uart_puts(str);
@@ -167,6 +170,161 @@ int mainMenu(){
     
 }
 
+void challengeOne(){
+
+    int snakeX = 1;
+    int snakeY = 1; 
+    fillScreen(0x0);
+    makingGrid();
+    trackScore();
+    int input;
+    int num = 0;
+
+    while(1){ 
+        
+        input = READ_INPUT();
+        if (input == 3){
+            return;
+        }else if (input == 8){
+            if (snakeBuffer[0]<30){
+                int i = snakeBuffer[0]+1;
+                int j = snakeBuffer[1];
+                
+                // Hard coded the conditions so the snake doesnt go through the walls
+                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
+                    clearingSquare(snakeBuffer[0],snakeBuffer[1]);
+                    snakeBuffer[0]++;
+                    drawingSnake(snakeBuffer[0],snakeBuffer[1]);
+                }
+            }
+        }else if (input == 7){
+            if (snakeBuffer[0]>1){
+                int i = snakeBuffer[0]-1;
+                int j = snakeBuffer[1];
+                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
+                    clearingSquare(snakeBuffer[0],snakeBuffer[1]);
+                    snakeBuffer[0]--;
+                    drawingSnake(snakeBuffer[0],snakeBuffer[1]);
+                }
+            }
+        }else if (input == 6){
+            if (snakeBuffer[1]<22){
+                int i = snakeBuffer[0];
+                int j = snakeBuffer[1]+1;
+                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
+                    clearingSquare(snakeBuffer[0],snakeBuffer[1]);
+                    snakeBuffer[1]++;
+                    drawingSnake(snakeBuffer[0],snakeBuffer[1]);
+                }
+            }
+        }else if (input == 5){
+            if (snakeBuffer[1]>1 ){
+                int i = snakeBuffer[0];
+                int j = snakeBuffer[1]-1;
+                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
+                    clearingSquare(snakeBuffer[0],snakeBuffer[1]);
+                    snakeBuffer[1]--;
+                    drawingSnake(snakeBuffer[0],snakeBuffer[1]);
+                }
+            }
+        }
+        checkKeys();
+        checkHearts();
+        checkBombs();
+        updateBomb(0);
+        updateBomb(1);
+        updateBomb(2);
+    }
+}
+
+
+void drawingSnake(int x, int y){
+    drawImage(SnakeHead.pixel_data, SnakeHead.width, SnakeHead.height, x*32+1, y*32+1);
+}
+
+// should update to add lines back
+void clearingSquare(int x, int y){
+    drawRect(x*32+1, y*32+1, (x+1)*32-1, (y+1)*32-1, 0x00, 1);
+}
+
+void trackScore(){
+    for (int i= 32; i<40; i++){
+        for (int j=0; j<24; j++){
+            if (i==34 && j==7){
+                if (keys == 1){
+                    drawImage(key.pixel_data, key.width, key.height, i*32, j*32);
+                }else if (keys == 2){
+                    drawImage(key.pixel_data, key.width, key.height, i*32, j*32);
+                    drawImage(key.pixel_data, key.width, key.height, (i+1)*32, (j)*32);
+                }else if (keys == 3){
+                    drawImage(key.pixel_data, key.width, key.height, i*32, j*32);
+                    drawImage(key.pixel_data, key.width, key.height, (i+1)*32, (j)*32);
+                    drawImage(key.pixel_data, key.width, key.height, (i+2)*32, (j)*32);
+                }
+            }
+            if (i==34 && j==12){
+                if (hearts == 1){
+                   drawImage(heart.pixel_data, heart.width, heart.height, i*32, j*32);
+                }
+                else if (hearts == 2){
+                    drawImage(heart.pixel_data, heart.width, heart.height, i*32, j*32);
+                    drawImage(heart.pixel_data, heart.width, heart.height, (i+1)*32, j*32);
+                }else if (hearts == 3){
+                    drawImage(heart.pixel_data, heart.width, heart.height, i*32, j*32);
+                    drawImage(heart.pixel_data, heart.width, heart.height, (i+1)*32, j*32);
+                    drawImage(heart.pixel_data, heart.width, heart.height, (i+2)*32, j*32);
+                }else if (hearts == 4){
+                    drawImage(heart.pixel_data, heart.width, heart.height, i*32, j*32);
+                    drawImage(heart.pixel_data, heart.width, heart.height, (i+1)*32, j*32);
+                    drawImage(heart.pixel_data, heart.width, heart.height, (i+2)*32, j*32);
+                    drawImage(heart.pixel_data, heart.width, heart.height, (i+3)*32, j*32);
+                }else{
+                    drawImage(heart.pixel_data, heart.width, heart.height, i*32, j*32);
+                    drawImage(heart.pixel_data, heart.width, heart.height, (i+1)*32, j*32);
+                    drawImage(heart.pixel_data, heart.width, heart.height, (i+2)*32, j*32);
+                    drawImage(heart.pixel_data, heart.width, heart.height, (i+3)*32, j*32);
+                    drawImage(heart.pixel_data, heart.width, heart.height, (i+4)*32, j*32);
+                }
+            }
+        }
+    }
+}
+
+void checkKeys(){
+    for (int i=0; i<3; i++){
+        if ((snakeBuffer[0] == keyBuffer[i][0]) && (snakeBuffer[1] == keyBuffer[i][1])){
+            keys++;
+            keyBuffer[i][0] = 0;
+            keyBuffer[i][1] = 0;
+        }
+    }
+    trackScore();
+}
+
+void checkHearts(){
+    for (int i=0; i<2; i++){
+        if ((snakeBuffer[0] == heartBuffer[i][0]) && (snakeBuffer[1] == heartBuffer[i][1])){
+            hearts++;
+            heartBuffer[i][0] = 0;
+            heartBuffer[i][1] = 0;  
+        }
+    }
+    trackScore();
+}
+
+void checkBombs(){
+    for (int i=0; i<2; i++){
+        if ((snakeBuffer[0] == bombbuffer[i][0]) && (snakeBuffer[1] == bombbuffer[i][1])){
+            hearts--;
+            clearingSquare(snakeBuffer[0],snakeBuffer[1]);
+            snakeBuffer[0] = 1;
+            snakeBuffer[1] = 1;
+            drawingSnake(1,1);
+        }
+    }
+    trackScore();
+}
+
 void makingGrid(){
     for (int i= 0; i<32; i++){
         for (int j=0; j<24; j++){
@@ -199,7 +357,7 @@ void makingGrid(){
                 //**Update Heart Buffer
             }
             // making keys
-            if ((i==23 && j==2) || (i==3 && j==20) || (i==2 && j==8)){
+            if ((i==23 && j==2) || (i==3 && j==20) || (i==2 && j==8) ){
                 drawImage(key.pixel_data, key.width, key.height, i*32, j*32);
                 //**Update Key Buffer
             }
@@ -211,24 +369,12 @@ void makingGrid(){
             else{
                 drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0xFFFFFF, 0);
             }
-            // making lines at the end of the grid 
-            if (i==31){     
-                drawRect(1023, (j)*32, 1023, (j+1)*32, 0xFFFFFF, 0);
-            }
+            // making lines at the vertical end of the grid 
             if(j==23){
                 drawRect((i)*32, 767, (i+1)*32, 767, 0xFFFFFF, 0);
             }
         }
     }
-}
-
-void drawingSnake(int x, int y){
-    drawImage(SnakeHead.pixel_data, SnakeHead.width, SnakeHead.height, x*32+1, y*32+1);
-}
-
-// should update to add lines back
-void clearingSquare(int x, int y){
-    drawRect(x*32+1, y*32+1, (x+1)*32-1, (y+1)*32-1, 0x00, 1);
 }
 
 void spawnBomb(int i, int j, int n, int t){
@@ -265,7 +411,7 @@ void updateBomb(int n) {
     }
     if (bombclearing[n][2] == 1) {
         clearingSquare(bombclearing[n][0], bombclearing[n][1]);
-        drawImage(explosion.pixel_data, explosion.width, explosion.height, (bombclearing[n][0] - 1)*32 + 1, (bombclearing[n][1] - 1)*32 + 1);
+        drawImage(explosion.pixel_data, explosion.width, explosion.height, (bombclearing[n][0])*32 + 1, (bombclearing[n][1])*32 + 1);
         bombclearing[n][2]--;
         return;
     }
@@ -287,68 +433,7 @@ void updateBomb(int n) {
     }
 }
 
-void challengeOne(){
 
-    int snakeX = 1;
-    int snakeY = 1; 
-    fillScreen(0x0);
-    makingGrid();
-    int input;
-    int num = 0;
-    while(1){
-        input = READ_INPUT();
-        if (input == 3){
-            return;
-        }else if (input == 8){
-            if (snakeX<30){
-                int i = snakeX+1;
-                int j = snakeY;
-                
-                // Hard coded the conditions so the snake doesnt go through the walls
-                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
-                    clearingSquare(snakeX, snakeY);
-                    snakeX++;
-                    drawingSnake(snakeX,snakeY);
-                }
-            }
-        }else if (input == 7){
-            if (snakeX>1){
-                int i = snakeX-1;
-                int j = snakeY;
-                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
-                    clearingSquare(snakeX, snakeY);
-                    snakeX--;
-                    drawingSnake(snakeX,snakeY);
-                }
-            }
-        }else if (input == 6){
-            if (snakeY<22){
-                int i = snakeX;
-                int j = snakeY+1;
-                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
-                    clearingSquare(snakeX, snakeY);
-                    snakeY++;
-                    drawingSnake(snakeX,snakeY);
-                }
-            }
-        }else if (input == 5){
-            if (snakeY>1 ){
-                int i = snakeX;
-                int j = snakeY-1;
-                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
-                    clearingSquare(snakeX, snakeY);
-                    snakeY--;
-                    drawingSnake(snakeX,snakeY);
-                }
-            }
-        }
-        // Need a better soltuion for the spawning!!!!
-        updateBomb(0);
-        updateBomb(1);
-        updateBomb(2);
-    
-    }
-}
 int main()
 {   
     // You can use framebuffer, width, height and pitch variables available in framebuffer.h
