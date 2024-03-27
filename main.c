@@ -9,10 +9,13 @@
 #include "heart.h" 
 #include "key.h" 
 #include "SnakeHead.h"
-#include "bomb.h"
+#include "bomb1.h"
+#include "bomb2.h"
+#include "bomb3.h"
 #include <stdbool.h>
 #include <stdio.h> 
 #include <stdlib.h>
+#include <explosion.h>
 
 // Regesters
 #define CLO_REG 0xFE003004
@@ -30,14 +33,20 @@ static unsigned *gpio = (unsigned*)GPIO_BASE; // GPIO base
 #define DAT 10
 
 // Color
+#define black 0x0
 #define cyan 0x7FFFFF
+
+// resolution 1920 × 1080
+#define resolutionWidth 1363
+#define resolutionHight 767
 
 // Setup global variables
 unsigned *clo = (unsigned* ) CLO_REG;
+// [id][xCoordinate, yCoordinate, Timer]
 int heartBuffer[5][2];
 int keyBuffer[3][2];
 int bombbuffer[3][2] = {{6,2}, {11,16}, {17,10}}; 
-int bombclearing[3][2];
+int bombclearing[3][3];
 
 void printf1(char *str) {
 	uart_puts(str);
@@ -114,32 +123,41 @@ int READ_INPUT(){
     return i;
 }
 
+// Menu snake location definition
+#define snakeXLeft resolutionWidth/4 - challenge1.width/2 - snakeHeadRight.width
+#define snakeXRight 3 * resolutionWidth/4 - challenge2.width/2 - snakeHeadRight.width
+#define snakeXMid resolutionWidth/2 - title.width/2 + title.width/6 - snakeHeadRight.width
+#define snakeYMid resolutionHight/2
+#define snakeYDown 3 * resolutionHight/4
 int mainMenu(){
     fillScreen(cyan);
-    drawImage(title.pixel_data, title.width, title.height, 384, 150);
-    drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, 168, 350);
-    drawImage(challenge1.pixel_data, challenge1.width, challenge1.height, 240, 350);
-    drawImage(challenge2.pixel_data, challenge2.width, challenge2.height, 584, 350);
-    drawImage(quit.pixel_data, quit.width, quit.height, 511, 400);
+    drawImage(title.pixel_data, title.width, title.height, resolutionWidth/2 - title.width/2, resolutionHight/4);
+    drawImage(challenge1.pixel_data, challenge1.width, challenge1.height, resolutionWidth/4 - challenge1.width/2, resolutionHight/2);
+    drawImage(challenge2.pixel_data, challenge2.width, challenge2.height, 3 * resolutionWidth/4 - challenge2.width/2, resolutionHight/2);
+    drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, snakeXLeft, snakeYMid);
+    drawImage(quit.pixel_data, quit.width, quit.height, resolutionWidth/2 - title.width/2 + title.width/6, 3 * resolutionHight/4);
     int selected = 1;
     while(1){
         int input = READ_INPUT();
+        // move right
         if (input == 8) {
-            drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, 512, 350);
-            drawRect(168, 350, 168 + snakeHeadRight.width, 350 + snakeHeadRight.height, cyan, 1); //left
-            drawRect(439, 400, 439 + snakeHeadRight.width, 400 + snakeHeadRight.height, cyan, 1); //down
+            drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, snakeXRight, snakeYMid);
+            drawRect(snakeXLeft, snakeYMid, snakeXLeft + snakeHeadRight.width, snakeYMid + snakeHeadRight.height, cyan, 1); //left
+            drawRect(snakeXMid, snakeYDown, snakeXMid + snakeHeadRight.width, snakeYDown + snakeHeadRight.height, cyan, 1); //down
             selected = 2;
         }
+        // move left
         if (input == 7) {
-            drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, 168, 350);
-            drawRect(439, 400, 439 + snakeHeadRight.width, 400 + snakeHeadRight.height, cyan, 1); //down
-            drawRect(512, 350, 512 + snakeHeadRight.width, 350 + snakeHeadRight.height, cyan, 1); //right
+            drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, snakeXLeft, snakeYMid);
+            drawRect(snakeXMid, snakeYDown, snakeXMid + snakeHeadRight.width, snakeYDown + snakeHeadRight.height, cyan, 1); //down
+            drawRect(snakeXRight, snakeYMid, snakeXRight + snakeHeadRight.width, snakeYMid + snakeHeadRight.height, cyan, 1); //right
             selected = 1;
         }
+        //move down
         if (input == 6) {
-            drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, 439, 400);
-            drawRect(168, 350, 168 + snakeHeadRight.width, 350 + snakeHeadRight.height, cyan, 1); //left
-            drawRect(512, 350, 512 + snakeHeadRight.width, 350 + snakeHeadRight.height, cyan, 1); //right
+            drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, snakeXMid, snakeYDown);
+            drawRect(snakeXLeft, snakeYMid, snakeXLeft + snakeHeadRight.width, snakeYMid + snakeHeadRight.height, cyan, 1); //left
+            drawRect(snakeXRight, snakeYMid, snakeXRight + snakeHeadRight.width, snakeYMid + snakeHeadRight.height, cyan, 1); //right
             selected = 3;
         }
         if (input == 9) {
@@ -169,11 +187,11 @@ void makingGrid(){
                 drawingSnake(i, j);
             }
             if (i==6 && j==2){
-                drawingBomb(i ,j, 0);
+                spawnBomb(i ,j, 0, 3);
             }else if (i==11 && j==16){
-                drawingBomb(i ,j, 1);
+                spawnBomb(i ,j, 1, 2);
             }else if (i==17 && j==10){
-                drawingBomb(i ,j, 2);
+                spawnBomb(i ,j, 2, 1);
             }
             //making hearts
             if ((i==26 && j==13) || (i==5 && j==16) ){
@@ -208,18 +226,65 @@ void drawingSnake(int x, int y){
     drawImage(SnakeHead.pixel_data, SnakeHead.width, SnakeHead.height, x*32+1, y*32+1);
 }
 
+// should update to add lines back
 void clearingSquare(int x, int y){
     drawRect(x*32+1, y*32+1, (x+1)*32-1, (y+1)*32-1, 0x00, 1);
 }
 
-void drawingBomb(int i, int j, int n){
+void spawnBomb(int i, int j, int n, int t){
     clearingSquare(i,j);
     int r1 = *clo%3;
     int r2 = *clo%3;
-    // updating the new bomb
+    // updating the new bomb location
     bombclearing[n][0] = bombbuffer[n][0] + r1;
-    bombclearing[n][1] = bombbuffer[n][1] + r2;   
-    drawImage(bomb.pixel_data, bomb.width, bomb.height, (bombclearing[n][0])*32, (bombclearing[n][1])*32);
+    bombclearing[n][1] = bombbuffer[n][1] + r2;
+    if (t == 3) {
+        drawImage(bomb3.pixel_data, bomb3.width, bomb3.height, (bombclearing[n][0])*32, (bombclearing[n][1])*32);
+        bombclearing[n][2] = 3;
+    }  
+    if (t == 2) {
+        drawImage(bomb2.pixel_data, bomb2.width, bomb2.height, (bombclearing[n][0])*32, (bombclearing[n][1])*32);
+        bombclearing[n][2] = 2;
+    } 
+    if (t == 1) {
+        drawImage(bomb1.pixel_data, bomb1.width, bomb1.height, (bombclearing[n][0])*32, (bombclearing[n][1])*32);
+        bombclearing[n][2] = 1;
+    } 
+}
+
+void updateBomb(int n) {
+    if (bombclearing[n][2] == 3) {
+        bombclearing[n][2]--;
+        drawImage(bomb2.pixel_data, bomb2.width, bomb2.height, (bombclearing[n][0])*32, (bombclearing[n][1])*32);
+        return;
+    }
+    if (bombclearing[n][2] == 2) {
+        bombclearing[n][2]--;
+        drawImage(bomb1.pixel_data, bomb1.width, bomb1.height, (bombclearing[n][0])*32, (bombclearing[n][1])*32);
+        return;
+    }
+    if (bombclearing[n][2] == 1) {
+        clearingSquare(bombclearing[n][0], bombclearing[n][1]);
+        drawImage(explosion.pixel_data, explosion.width, explosion.height, (bombclearing[n][0] - 1)*32 + 1, (bombclearing[n][1] - 1)*32 + 1);
+        bombclearing[n][2]--;
+        return;
+    }
+    if (bombclearing[n][2] == 0) {
+        //for (int i = bombclearing[n][0] - 1; i < bombclearing[n][0] + 1; i++) {
+            //for (int j = bombclearing[n][1] - 1; j < bombclearing[n][1] + 1; i++) {
+        clearingSquare(bombclearing[n][0] - 1, bombclearing[n][1] - 1);
+        clearingSquare(bombclearing[n][0], bombclearing[n][1] - 1);
+        clearingSquare(bombclearing[n][0] + 1, bombclearing[n][1] - 1);
+        clearingSquare(bombclearing[n][0] - 1, bombclearing[n][1]);
+        clearingSquare(bombclearing[n][0], bombclearing[n][1]);
+        clearingSquare(bombclearing[n][0] + 1, bombclearing[n][1]);
+        clearingSquare(bombclearing[n][0] - 1, bombclearing[n][1] + 1);
+        clearingSquare(bombclearing[n][0], bombclearing[n][1] + 1);
+        clearingSquare(bombclearing[n][0] + 1, bombclearing[n][1] + 1);
+            //}
+        //}
+        spawnBomb(bombclearing[n][0], bombclearing[n][1], n, 3);
+    }
 }
 
 void challengeOne(){
@@ -277,11 +342,11 @@ void challengeOne(){
                 }
             }
         }
-        if (*clo % 17){             // Need a better soltuion for the spawning!!!!
-            drawingBomb(bombclearing[0][0], bombclearing[0][1], 0);
-            drawingBomb(bombclearing[1][0], bombclearing[1][1], 1);
-            drawingBomb(bombclearing[2][0], bombclearing[2][1], 2);
-        }
+        // Need a better soltuion for the spawning!!!!
+        updateBomb(0);
+        updateBomb(1);
+        updateBomb(2);
+    
     }
 }
 int main()
