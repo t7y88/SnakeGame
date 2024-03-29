@@ -34,7 +34,6 @@
 #include <nine.h>
 
 
-
 // Regesters
 #define CLO_REG 0xFE003004
 #define GPIO_BASE 0xFE200000 
@@ -62,9 +61,9 @@ static unsigned *gpio = (unsigned*)GPIO_BASE; // GPIO base
 // Setup global variables
 unsigned *clo = (unsigned* ) CLO_REG;
 // [id][xCoordinate, yCoordinate, Timer]
-int snakeBuffer[2] = {1,1};
-int heartBuffer[2][2] = {{26,13}, {5,16}};
-int keyBuffer[3][2] = {{2,8}, {23,2}, {3,20}};
+int snakeBuffer[2];
+int heartBuffer[2][2];
+int keyBuffer[3][2];
 int bombbuffer[3][2] = {{6,2}, {11,16}, {17,10}}; 
 int bombclearing[3][3];
 int keys = 0;
@@ -72,6 +71,7 @@ int hearts = 3;
 int time_digit = 9;
 int time_tens = 9;
 int t = 0;
+int points = 0;
 int selected = 0;
 
 void printf1(char *str) {
@@ -212,16 +212,27 @@ int mainMenu(){
 }
 
 void challengeOne(){
-
-    fillScreen(0x0);
-    makingGrid();
-    trackScore();
+    // reinitilizing values
+    keys = 0;
+    hearts = 3;
     snakeBuffer[0] = 1;
     snakeBuffer[1] = 1;
+    heartBuffer[0][0] = 0;
+    heartBuffer[0][1] = 0;
+    heartBuffer[1][0] = 0;
+    heartBuffer[1][1] = 0;
+    keyBuffer[0][0] = 2;
+    keyBuffer[0][1] = 8;
+    keyBuffer[1][0] = 23;
+    keyBuffer[1][1] = 2;
+    keyBuffer[2][0] = 3;
+    keyBuffer[2][1] = 20;
     time_digit = 9;
     time_tens = 9;
     int input;
-
+    fillScreen(0x0);
+    makingGrid();
+    trackScore();
     while(1){ 
         
         input = READ_INPUT();
@@ -272,13 +283,36 @@ void challengeOne(){
                     snakeBuffer[1]--;
                     drawingSnake(snakeBuffer[0],snakeBuffer[1]);
                 }
+
             }
         }
         checkKeys();
         checkHearts();
+        checkVictory();
     }
 }
+void spawnHearts() {
+    // making hearts
+    // heart location 26 13 at 85 and 5 and 16 at 80
+    if ((time_digit == 5) && (time_tens == 8)) {
+        heartBuffer[0][0] = 26;
+        heartBuffer[0][1] = 13;
+        drawImage(heart.pixel_data, heart.width, heart.height, 26*32, 13*32);
+        drawRect(26*32, 13*32, (26+1)*32, 13*32, white, 1);
+        drawRect(26*32, 13*32, 26*32, (13+1)*32, white, 1);
+    }
+    if ((time_digit == 0) && (time_tens == 8)) {
+        heartBuffer[0][0] = 5;
+        heartBuffer[0][1] = 16;
+        drawImage(heart.pixel_data, heart.width, heart.height, 5*32, 16*32);
+        drawRect(5*32, 16*32, (5+1)*32, 16*32, white, 1);
+        drawRect(5*32, 16*32, 5*32, (16+1)*32, white, 1);
+    }    
+}
 
+void score() {
+    int score_thousands = points/1000;
+}
 
 void drawingSnake(int x, int y){
     drawImage(SnakeHead.pixel_data, SnakeHead.width, SnakeHead.height, x*32+1, y*32+1);
@@ -291,6 +325,7 @@ void clearingSquare(int x, int y){
 }
 
 void trackScore(){
+    drawRect(34 * 32, 12 * 32, 34 * 32 + heart.width * 5, 12 * 32 + heart.height, black, 1);
     for (int i= 32; i<40; i++){
         for (int j=0; j<24; j++){
             if (i==34 && j==7){
@@ -306,7 +341,10 @@ void trackScore(){
                 }
             }
             if (i==34 && j==12){
-                if (hearts == 1){
+                if (hearts == 0){
+                    gameOver();
+                }
+                else if (hearts == 1){
                    drawImage(heart.pixel_data, heart.width, heart.height, i*32, j*32);
                 }
                 else if (hearts == 2){
@@ -357,6 +395,14 @@ void checkHearts(){
     trackScore();
 }
 
+void checkVictory(){
+    if (keys != 3) return; 
+    if ((snakeBuffer[0] == 30) && (snakeBuffer[1] == 22)){
+        fillScreen(white);
+        selected = 0;
+    } 
+}
+
 
 void makingGrid(){
     for (int i= 0; i<32; i++){
@@ -378,16 +424,11 @@ void makingGrid(){
                 drawingSnake(i, j);
             }
             if (i==6 && j==2){
-                spawnBomb(i ,j, 0, 3);
+                spawnBomb(i ,j, 0, 3, 3, 3);
             }else if (i==11 && j==16){
-                spawnBomb(i ,j, 1, 2);
+                spawnBomb(i ,j, 1, 2, 3, 3);
             }else if (i==17 && j==10){
-                spawnBomb(i ,j, 2, 1);
-            }
-            //making hearts
-            if ((i==26 && j==13) || (i==5 && j==16) ){
-                drawImage(heart.pixel_data, heart.width, heart.height, i*32, j*32);
-                //**Update Heart Buffer
+                spawnBomb(i ,j, 2, 1, 3, 3);
             }
             // making keys
             if ((i==23 && j==2) || (i==3 && j==20) || (i==2 && j==8) ){
@@ -410,10 +451,10 @@ void makingGrid(){
     }
 }
 
-void spawnBomb(int i, int j, int n, int t){
+void spawnBomb(int i, int j, int n, int t, int width, int height){
     clearingSquare(i,j);
-    int r1 = *clo%3;
-    int r2 = *clo%3;
+    int r1 = *clo%width;
+    int r2 = *clo%height;
     // updating the new bomb location
     bombclearing[n][0] = bombbuffer[n][0] + r1;
     bombclearing[n][1] = bombbuffer[n][1] + r2;
@@ -451,7 +492,6 @@ void updateBomb(int n) {
                     snakeBuffer[0] = 1;
                     snakeBuffer[1] = 1;
                     drawingSnake(1,1);
-                    trackScore();
                 }
             }
         }
@@ -467,7 +507,8 @@ void updateBomb(int n) {
             }
         }
         drawingSnake(snakeBuffer[0], snakeBuffer[1]);
-        spawnBomb(bombclearing[n][0], bombclearing[n][1], n, 3);
+        int fuse = *clo%3 + 1;
+        spawnBomb(bombclearing[n][0], bombclearing[n][1], n, fuse, 3, 3);
     }
 }
 
@@ -484,6 +525,7 @@ void timer() {
         updateBomb(0);
         updateBomb(1);
         updateBomb(2);
+        spawnHearts();
     }
     if (time_digit < 10) {
         drawImage(nine.pixel_data, nine.width, nine.height, x, y);
@@ -554,10 +596,8 @@ void timer() {
 }
 
 abuffer[4][2] = {{0,20}, {0,21},{0,22}, {0,23}};
-int score2;
 
 void challengeTwo(){
-    
     fillScreen(0x0);
     makingGrid2();
     time_digit = 9;
@@ -571,88 +611,72 @@ void challengeTwo(){
     abuffer[1][1] = 21;
     abuffer[2][1] = 22;
     abuffer[3][1] = 23;
-    score2 = 0;
 
     while(1){ 
         
         input = READ_INPUT();
         if (input == 3){
-            selected =0;
+            selected = 0;
             return;
         }else if (input==8){
             if (abuffer[0][0]<39){
                 int j = abuffer[0][1];
                 int i = abuffer[0][0]+1;
-                if (!((i==24 && j==10) || (i==3 && j==16)|| (i==33 && j==19) || (i==23 && j==10) || (i==2 && j==16) || (i==32 && j==19) || (i==6 && j==20) || (i==12 && j==8) || (i==23 && j==18) || (i==2 && j==9) || (i==33 && j==7) || (i==7 && j==12) || (i==29 && j==14)|| (i==17 && j==21) || (i==21 && j==15) || (i==14 && j==14) || (i==17 && j==7) || (i==35 && j==21) || (i == abuffer[0][0] && j == abuffer[0][1]) || (i == abuffer[1][0] && j == abuffer[1][1]) || (i == abuffer[2][0] && j == abuffer[2][1]) || (i == abuffer[3][0] && j == abuffer[3][1]) || (i>=33 && i<=36 && j>=11 && j<=14) || (i>=12 && i<=15 && j>=18 && j<=21))){
-                    clearingSand(abuffer[3][0], abuffer[3][1]);
-                    abuffer[3][1] = abuffer[2][1];
-                    abuffer[3][0] = abuffer[2][0];
-                    abuffer[2][1] = abuffer[1][1];
-                    abuffer[2][0] = abuffer[1][0];
-                    abuffer[1][1] = abuffer[0][1];
-                    abuffer[1][0] = abuffer[0][0];
-                    abuffer[0][1] = j;
-                    abuffer[0][0] = i;
-                    drawingAnaconda(i,j);
-                }
+                clearingSand(abuffer[3][0], abuffer[3][1]);
+                abuffer[3][1] = abuffer[2][1];
+                abuffer[3][0] = abuffer[2][0];
+                abuffer[2][1] = abuffer[1][1];
+                abuffer[2][0] = abuffer[1][0];
+                abuffer[1][1] = abuffer[0][1];
+                abuffer[1][0] = abuffer[0][0];
+                abuffer[0][1] = j;
+                abuffer[0][0] = i;
+                drawingAnaconda(i,j);
             }
         }else if (input==7){
             if (abuffer[0][0]>0){
                 int j = abuffer[0][1];
                 int i = abuffer[0][0]-1;
-                if (!((i==24 && j==10) || (i==3 && j==16)|| (i==33 && j==19) || (i==23 && j==10) || (i==2 && j==16) || (i==32 && j==19) || (i==6 && j==20) || (i==12 && j==8) || (i==23 && j==18) || (i==2 && j==9) || (i==33 && j==7) || (i==7 && j==12) || (i==29 && j==14)|| (i==17 && j==21) || (i==21 && j==15) || (i==14 && j==14) || (i==17 && j==7) || (i==35 && j==21) || (i == abuffer[0][0] && j == abuffer[0][1]) || (i == abuffer[1][0] && j == abuffer[1][1]) || (i == abuffer[2][0] && j == abuffer[2][1]) || (i == abuffer[3][0] && j == abuffer[3][1])|| (i>=33 && i<=36 && j>=11 && j<=14) || (i>=12 && i<=15 && j>=18 && j<=21))){
-                    if (i==4 && j==8){
-                        score2 += 100;
-                    }else if (i==37 && j==9){
-                        score2 += 200;
-                    }else if (i==25 && j==17){
-                        score2 += 400;
-                    }
-                        clearingSand(abuffer[3][0], abuffer[3][1]);
-                        abuffer[3][1] = abuffer[2][1];
-                        abuffer[3][0] = abuffer[2][0];
-                        abuffer[2][1] = abuffer[1][1];
-                        abuffer[2][0] = abuffer[1][0];
-                        abuffer[1][1] = abuffer[0][1];
-                        abuffer[1][0] = abuffer[0][0];
-                        abuffer[0][1] = j;
-                        abuffer[0][0] = i;
-                        drawingAnaconda(i,j);
-                }
+                clearingSand(abuffer[3][0], abuffer[3][1]);
+                abuffer[3][1] = abuffer[2][1];
+                abuffer[3][0] = abuffer[2][0];
+                abuffer[2][1] = abuffer[1][1];
+                abuffer[2][0] = abuffer[1][0];
+                abuffer[1][1] = abuffer[0][1];
+                abuffer[1][0] = abuffer[0][0];
+                abuffer[0][1] = j;
+                abuffer[0][0] = i;
+                drawingAnaconda(i,j);
             }
         }else if (input==6){
             if (abuffer[0][1]<23){
                 int j = abuffer[0][1]+1;
                 int i = abuffer[0][0];
-                if (!((i==24 && j==10) || (i==3 && j==16)|| (i==33 && j==19) || (i==23 && j==10) || (i==2 && j==16) || (i==32 && j==19) || (i==6 && j==20) || (i==12 && j==8) || (i==23 && j==18) || (i==2 && j==9) || (i==33 && j==7) || (i==7 && j==12) || (i==29 && j==14)|| (i==17 && j==21) || (i==21 && j==15) || (i==14 && j==14) || (i==17 && j==7) || (i==35 && j==21) || (i == abuffer[0][0] && j == abuffer[0][1]) || (i == abuffer[1][0] && j == abuffer[1][1]) || (i == abuffer[2][0] && j == abuffer[2][1]) || (i == abuffer[3][0] && j == abuffer[3][1])|| (i>=33 && i<=36 && j>=11 && j<=14) || (i>=12 && i<=15 && j>=18 && j<=21))){    
-                    clearingSand(abuffer[3][0], abuffer[3][1]);
-                    abuffer[3][1] = abuffer[2][1];
-                    abuffer[3][0] = abuffer[2][0];
-                    abuffer[2][1] = abuffer[1][1];
-                    abuffer[2][0] = abuffer[1][0];
-                    abuffer[1][1] = abuffer[0][1];
-                    abuffer[1][0] = abuffer[0][0];
-                    abuffer[0][1] = j;
-                    abuffer[0][0] = i;
-                    drawingAnaconda(i,j);
-                }
+                clearingSand(abuffer[3][0], abuffer[3][1]);
+                abuffer[3][1] = abuffer[2][1];
+                abuffer[3][0] = abuffer[2][0];
+                abuffer[2][1] = abuffer[1][1];
+                abuffer[2][0] = abuffer[1][0];
+                abuffer[1][1] = abuffer[0][1];
+                abuffer[1][0] = abuffer[0][0];
+                abuffer[0][1] = j;
+                abuffer[0][0] = i;
+                drawingAnaconda(i,j);
             }
         }else if (input==5){
             if (abuffer[0][1]>6){
                 int j = abuffer[0][1]-1;
                 int i = abuffer[0][0];
-                if (!((i==24 && j==10) || (i==3 && j==16)|| (i==33 && j==19) || (i==23 && j==10) || (i==2 && j==16) || (i==32 && j==19) || (i==6 && j==20) || (i==12 && j==8) || (i==23 && j==18) || (i==2 && j==9) || (i==33 && j==7) || (i==7 && j==12) || (i==29 && j==14)|| (i==17 && j==21) || (i==21 && j==15) || (i==14 && j==14) || (i==17 && j==7) || (i==35 && j==21) || (i == abuffer[0][0] && j == abuffer[0][1]) || (i == abuffer[1][0] && j == abuffer[1][1]) || (i == abuffer[2][0] && j == abuffer[2][1]) || (i == abuffer[3][0] && j == abuffer[3][1])|| (i>=33 && i<=36 && j>=11 && j<=14) || (i>=12 && i<=15 && j>=18 && j<=21))){
-                    clearingSand(abuffer[3][0], abuffer[3][1]);
-                    abuffer[3][1] = abuffer[2][1];
-                    abuffer[3][0] = abuffer[2][0];
-                    abuffer[2][1] = abuffer[1][1];
-                    abuffer[2][0] = abuffer[1][0];
-                    abuffer[1][1] = abuffer[0][1];
-                    abuffer[1][0] = abuffer[0][0];
-                    abuffer[0][1] = j;
-                    abuffer[0][0] = i;
-                    drawingAnaconda(i,j);
-                }
+                clearingSand(abuffer[3][0], abuffer[3][1]);
+                abuffer[3][1] = abuffer[2][1];
+                abuffer[3][0] = abuffer[2][0];
+                abuffer[2][1] = abuffer[1][1];
+                abuffer[2][0] = abuffer[1][0];
+                abuffer[1][1] = abuffer[0][1];
+                abuffer[1][0] = abuffer[0][0];
+                abuffer[0][1] = j;
+                abuffer[0][0] = i;
+                drawingAnaconda(i,j);
             }
         }
     }
@@ -669,12 +693,6 @@ void makingGrid2(){
                 drawImage(log.pixel_data, log.width, log.height, i*32+1, j*32+1);
             }else if ((i==24 && j==10) || (i==3 && j==16)|| (i==33 && j==19)){
                 continue;
-            }else if ((i==4 && j==8 )||(i==25 && j==22) ){
-                drawImage(orb1.pixel_data, orb1.width, orb1.height, i*32+1, j*32+1);
-            }else if ((i==37 && j==9) || (i==15 && j==7)){
-                drawImage(orb2.pixel_data, orb2.width, orb2.height, i*32+1, j*32+1);
-            }else if (i==21 && j==11){
-                drawImage(orb3.pixel_data, orb3.width, orb3.height, i*32+1, j*32+1);
             }else{
                 clearingSand(i,j);
             }
@@ -686,7 +704,6 @@ void makingGrid2(){
     drawImage(pond.pixel_data, pond.width, pond.height, 33*32+1, 11*32+1);
     drawImage(pond.pixel_data, pond.width, pond.height, 12*32+1, 18*32+1);
 }
-
 void clearingSand(int i, int j){
     drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0xFDFD96, 1);
     drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0x0, 0);
@@ -702,8 +719,13 @@ void drawingAnaconda(int i, int j){
     }
 }
 
-int main()
-{   
+
+void gameOver() {
+    fillScreen(black);
+    selected = 0;
+}
+
+int main() {   
     // You can use framebuffer, width, height and pitch variables available in framebuffer.h
     // Draw a (Green) pixel at coordinates (10,10)
     //drawPixel(10,10,0xFF00FF00);
@@ -712,7 +734,6 @@ int main()
     init_framebuffer();
 
     Init_GPIO();
-    int selected;
     while(1){
         selected = mainMenu();
         if (selected == 1){
@@ -727,4 +748,4 @@ int main()
         }
     }
     return 0;
-}
+}   
