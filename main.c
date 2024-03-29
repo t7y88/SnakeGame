@@ -15,7 +15,7 @@
 #include <stdbool.h>
 #include <stdio.h> 
 #include <stdlib.h>
-#include <explosion.h>
+#include <explosion2.h>
 
 // Regesters
 #define CLO_REG 0xFE003004
@@ -35,6 +35,7 @@ static unsigned *gpio = (unsigned*)GPIO_BASE; // GPIO base
 // Color
 #define black 0x0
 #define cyan 0x7FFFFF
+#define white 0xFFFFFF
 
 // resolution 1920 × 1080
 #define resolutionWidth 1363
@@ -244,7 +245,9 @@ void drawingSnake(int x, int y){
 
 // should update to add lines back
 void clearingSquare(int x, int y){
-    drawRect(x*32+1, y*32+1, (x+1)*32-1, (y+1)*32-1, 0x00, 1);
+    drawRect(x*32, y*32, (x+1)*32, y*32, white, 1);
+    drawRect(x*32, y*32, x*32, (y+1)*32, white, 1);
+    drawRect(x*32+1, y*32+1, (x+1)*32-1, (y+1)*32-1, black, 1);
 }
 
 void trackScore(){
@@ -413,24 +416,26 @@ void updateBomb(int n) {
     }
     if (bombclearing[n][2] == 1) {
         clearingSquare(bombclearing[n][0], bombclearing[n][1]);
-        drawImage(explosion.pixel_data, explosion.width, explosion.height, (bombclearing[n][0])*32 + 1, (bombclearing[n][1])*32 + 1);
+        drawImage(explosion2.pixel_data, explosion2.width, explosion2.height, (bombclearing[n][0] - 1)*32, (bombclearing[n][1] - 1)*32);
         bombclearing[n][2]--;
         return;
     }
     if (bombclearing[n][2] == 0) {
-        //for (int i = bombclearing[n][0] - 1; i < bombclearing[n][0] + 1; i++) {
-            //for (int j = bombclearing[n][1] - 1; j < bombclearing[n][1] + 1; i++) {
-        clearingSquare(bombclearing[n][0] - 1, bombclearing[n][1] - 1);
-        clearingSquare(bombclearing[n][0], bombclearing[n][1] - 1);
-        clearingSquare(bombclearing[n][0] + 1, bombclearing[n][1] - 1);
-        clearingSquare(bombclearing[n][0] - 1, bombclearing[n][1]);
-        clearingSquare(bombclearing[n][0], bombclearing[n][1]);
-        clearingSquare(bombclearing[n][0] + 1, bombclearing[n][1]);
-        clearingSquare(bombclearing[n][0] - 1, bombclearing[n][1] + 1);
-        clearingSquare(bombclearing[n][0], bombclearing[n][1] + 1);
-        clearingSquare(bombclearing[n][0] + 1, bombclearing[n][1] + 1);
-            //}
-        //}
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; i++) {
+                
+                clearingSquare(i, j);
+        //clearingSquare(bombclearing[n][0] - 1, bombclearing[n][1] - 1);
+        //clearingSquare(bombclearing[n][0], bombclearing[n][1] - 1);
+        //clearingSquare(bombclearing[n][0] + 1, bombclearing[n][1] - 1);
+        //clearingSquare(bombclearing[n][0] - 1, bombclearing[n][1]);
+        //clearingSquare(bombclearing[n][0], bombclearing[n][1]);
+        //clearingSquare(bombclearing[n][0] + 1, bombclearing[n][1]);
+        //clearingSquare(bombclearing[n][0] - 1, bombclearing[n][1] + 1);
+        //clearingSquare(bombclearing[n][0], bombclearing[n][1] + 1);
+        //clearingSquare(bombclearing[n][0] + 1, bombclearing[n][1] + 1);
+            }
+        }
         spawnBomb(bombclearing[n][0], bombclearing[n][1], n, 3);
     }
 }
