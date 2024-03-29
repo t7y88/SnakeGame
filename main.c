@@ -16,6 +16,17 @@
 #include <stdio.h> 
 #include <stdlib.h>
 #include <explosion2.h>
+#include <one.h>
+#include <two.h>
+#include <three.h>
+#include <four.h>
+#include <five.h>
+#include <six.h>
+#include <seven.h>
+#include <eight.h>
+#include <nine.h>
+#include <zero.h>
+
 
 // Regesters
 #define CLO_REG 0xFE003004
@@ -44,14 +55,16 @@ static unsigned *gpio = (unsigned*)GPIO_BASE; // GPIO base
 // Setup global variables
 unsigned *clo = (unsigned* ) CLO_REG;
 // [id][xCoordinate, yCoordinate, Timer]
-int snakeBuffer[1] = {1,1};
+int snakeBuffer[2] = {1,1};
 int heartBuffer[2][2] = {{26,13}, {5,16}};
 int keyBuffer[3][2] = {{2,8}, {23,2}, {3,20}};
 int bombbuffer[3][2] = {{6,2}, {11,16}, {17,10}}; 
 int bombclearing[3][3];
 int keys = 0;
 int hearts = 3;
-
+int time_digit = 9;
+int time_tens = 9;
+int t = 0;
 void printf1(char *str) {
 	uart_puts(str);
 }
@@ -120,11 +133,19 @@ int READ_SNES(){
 int READ_INPUT(){
     // B Y SL ST UP DOWN LEFT RIGHT A  X  L  R
     // 1 2 3  4  5  6    7    8     9 10 11 12
-    int i = 0;
-    int y = 1;
-    while(i == 0) i = READ_SNES();
-    while(y != 0) y = READ_SNES();
-    return i;
+    int pressed = 0;
+    int release = 1;
+    while(pressed == 0) {
+        pressed = READ_SNES();
+        t++;
+        if (t == 5000){
+            timer();
+            t = 0;
+        }
+        //drawRect(timer, timer, (timer+1)*32, (timer+1)*32, 0xFFFFFF, 1);
+    }
+    while(release != 0) release = READ_SNES();
+    return pressed;
 }
 
 // Menu snake location definition
@@ -176,9 +197,11 @@ int mainMenu(){
 
 void challengeOne(){
 
-    fillScreen(0x0);
+    fillScreen(black);
     makingGrid();
     trackScore();
+    time_digit = 9;
+    time_tens = 9;
     int input;
 
     while(1){ 
@@ -231,7 +254,6 @@ void challengeOne(){
         }
         checkKeys();
         checkHearts();
-        checkBombs();
         updateBomb(0);
         updateBomb(1);
         updateBomb(2);
@@ -311,19 +333,6 @@ void checkHearts(){
             // sets this heart at an unreachable postion
             heartBuffer[i][0] = 0;
             heartBuffer[i][1] = 0;  
-        }
-    }
-    trackScore();
-}
-
-void checkBombs(){
-    for (int i=0; i<2; i++){
-        if ((snakeBuffer[0] == bombbuffer[i][0]) && (snakeBuffer[1] == bombbuffer[i][1])){
-            hearts--;
-            clearingSquare(snakeBuffer[0],snakeBuffer[1]);
-            snakeBuffer[0] = 1;
-            snakeBuffer[1] = 1;
-            drawingSnake(1,1);
         }
     }
     trackScore();
@@ -414,21 +423,101 @@ void updateBomb(int n) {
         return;
     }
     if (bombclearing[n][2] == 1) {
+        for (int i = bombclearing[n][0] - 1; i < bombclearing[n][0] + 2; i++) {
+            for (int j = bombclearing[n][1] - 1; j < bombclearing[n][1] + 2; j++) {
+                if(snakeBuffer[0] == i && snakeBuffer[1] == j) {
+                    hearts--;
+                    clearingSquare(snakeBuffer[0],snakeBuffer[1]);
+                    snakeBuffer[0] = 1;
+                    snakeBuffer[1] = 1;
+                    drawingSnake(1,1);
+                    trackScore();
+                }
+            }
+        }
+        bombclearing[n][2]--;
         clearingSquare(bombclearing[n][0], bombclearing[n][1]);
         drawImage(explosion2.pixel_data, explosion2.width, explosion2.height, (bombclearing[n][0] - 1)*32, (bombclearing[n][1] - 1)*32);
-        bombclearing[n][2]--;
         return;
     }
     if (bombclearing[n][2] == 0) {
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                clearingSquare(bombclearing[n][0] - 1 + i, bombclearing[n][1] - 1 + j);
+        for (int i = bombclearing[n][0] - 1; i < bombclearing[n][0] + 2; i++) {
+            for (int j = bombclearing[n][1] - 1; j < bombclearing[n][1] + 2; j++) {
+                clearingSquare(i, j);
             }
         }
+        drawingSnake(snakeBuffer[0], snakeBuffer[1]);
         spawnBomb(bombclearing[n][0], bombclearing[n][1], n, 3);
     }
 }
 
+void timer() {
+    time_digit--;
+    if (time_digit == -1){
+        time_digit = 9;
+        time_tens--;
+    }
+    if (time_tens == 9) {
+        drawImage(nine.pixel_data, nine.width, nine.height, 1136, 100);
+    }
+    if (time_tens == 8) {
+        drawImage(eight.pixel_data, eight.width, eight.height, 1136, 100);
+    }
+    if (time_tens == 7) {
+        drawImage(seven.pixel_data, seven.width, seven.height, 1136, 100);
+    }
+    if (time_tens == 6) {
+        drawImage(six.pixel_data, six.width, six.height, 1136, 100);
+    }
+    if (time_tens == 5) {
+        drawImage(five.pixel_data, five.width, five.height, 1136, 100);
+    }
+    if (time_tens == 4) {
+        drawImage(four.pixel_data, four.width, four.height, 1136, 100);
+    }
+    if (time_tens == 3) {
+        drawImage(three.pixel_data, three.width, three.height, 1136, 100);
+    }
+    if (time_tens == 2) {
+        drawImage(two.pixel_data, two.width, two.height, 1136, 100);
+    }
+    if (time_tens == 1) {
+        drawImage(one.pixel_data, one.width, one.height, 1136, 100);
+    }
+    if (time_tens == 0) {
+        drawImage(zero.pixel_data, zero.width, zero.height, 1136, 100);
+    }
+    if (time_digit == 9) {
+        drawImage(nine.pixel_data, nine.width, nine.height, 1200, 100);
+    }
+    if (time_digit == 8) {
+        drawImage(eight.pixel_data, eight.width, eight.height, 1200, 100);
+    }
+    if (time_digit == 7) {
+        drawImage(seven.pixel_data, seven.width, seven.height, 1200, 100);
+    }
+    if (time_digit == 6) {
+        drawImage(six.pixel_data, six.width, six.height, 1200, 100);
+    }
+    if (time_digit == 5) {
+        drawImage(five.pixel_data, five.width, five.height, 1200, 100);
+    }
+    if (time_digit == 4) {
+        drawImage(four.pixel_data, four.width, four.height, 1200, 100);
+    }
+    if (time_digit == 3) {
+        drawImage(three.pixel_data, three.width, three.height, 1200, 100);
+    }
+    if (time_digit == 2) {
+        drawImage(two.pixel_data, two.width, two.height, 1200, 100);
+    }
+    if (time_digit == 1) {
+        drawImage(one.pixel_data, one.width, one.height, 1200, 100);
+    }
+    if (time_digit == 0) {
+        drawImage(zero.pixel_data, zero.width, zero.height, 1200, 100);
+    }
+}
 
 abuffer[4][2] = {{0,20}, {0,21},{0,22}, {0,23}};
 
