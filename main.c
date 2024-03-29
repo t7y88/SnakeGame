@@ -243,7 +243,6 @@ void drawingSnake(int x, int y){
     drawImage(SnakeHead.pixel_data, SnakeHead.width, SnakeHead.height, x*32+1, y*32+1);
 }
 
-// should update to add lines back
 void clearingSquare(int x, int y){
     drawRect(x*32, y*32, (x+1)*32, y*32, white, 1);
     drawRect(x*32, y*32, x*32, (y+1)*32, white, 1);
@@ -422,18 +421,8 @@ void updateBomb(int n) {
     }
     if (bombclearing[n][2] == 0) {
         for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; i++) {
-                
-                clearingSquare(i, j);
-        //clearingSquare(bombclearing[n][0] - 1, bombclearing[n][1] - 1);
-        //clearingSquare(bombclearing[n][0], bombclearing[n][1] - 1);
-        //clearingSquare(bombclearing[n][0] + 1, bombclearing[n][1] - 1);
-        //clearingSquare(bombclearing[n][0] - 1, bombclearing[n][1]);
-        //clearingSquare(bombclearing[n][0], bombclearing[n][1]);
-        //clearingSquare(bombclearing[n][0] + 1, bombclearing[n][1]);
-        //clearingSquare(bombclearing[n][0] - 1, bombclearing[n][1] + 1);
-        //clearingSquare(bombclearing[n][0], bombclearing[n][1] + 1);
-        //clearingSquare(bombclearing[n][0] + 1, bombclearing[n][1] + 1);
+            for (int j = 0; j < 3; j++) {
+                clearingSquare(bombclearing[n][0] - 1 + i, bombclearing[n][1] - 1 + j);
             }
         }
         spawnBomb(bombclearing[n][0], bombclearing[n][1], n, 3);
