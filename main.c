@@ -21,6 +21,7 @@
 #include "orb1.h"
 #include "orb2.h"
 #include "orb3.h"
+#include "log.h"
 #include <zero.h>
 #include <one.h>
 #include <two.h>
@@ -535,6 +536,14 @@ void challengeTwo(){
     fillScreen(0x0);
     makingGrid2();
     int input;
+    abuffer[0][0] = 0; //starts at zero everytime
+    abuffer[1][0] = 0;
+    abuffer[2][0] = 0;
+    abuffer[3][0] = 0;
+    abuffer[0][1] = 20;
+    abuffer[1][1] = 21;
+    abuffer[2][1] = 22;
+    abuffer[3][1] = 23;
 
     while(1){ 
         
@@ -613,18 +622,24 @@ void makingGrid2(){
             }else{
                 clearingSand(i,j);
             }
-            if ((i==6 && j==20) || (i==12 && j==8) || (i==23 && j==18) || (i==2 && j==8) || (i==37 && j==6)){
+            if ((i==6 && j==20) || (i==12 && j==8) || (i==23 && j==18) || (i==2 && j==9) || (i==33 && j==7) || (i==7 && j==12) || (i==29 && j==14)|| (i==17 && j==21) || (i==21 && j==15) || (i==14 && j==14) || (i==17 && j==7) || (i==35 && j==21)){
                 drawImage(tree.pixel_data, tree.width, tree.height, i*32, j*32);
             }
             drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0x0, 0);
         }
     }
+    drawImage(log.pixel_data, log.width, log.height, 23*32+1, 10*32+1);
+    drawImage(log.pixel_data, log.width, log.height, 2*32+1, 16*32+1);
+    drawImage(log.pixel_data, log.width, log.height, 32*32+1, 19*32+1);
+    
+            
     drawImage(pond.pixel_data, pond.width, pond.height, 33*32, 11*32);
     drawImage(pond.pixel_data, pond.width, pond.height, 12*32, 18*32);
 }
 
 void clearingSand(int i, int j){
     drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0xFDFD96, 1);
+    drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0x0, 0);
 }
 
 void drawingAnaconda(int i, int j){
