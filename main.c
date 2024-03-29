@@ -15,7 +15,13 @@
 #include <stdbool.h>
 #include <stdio.h> 
 #include <stdlib.h>
-#include <explosion2.h>
+#include "explosion2.h"
+#include "tree.h"
+#include "pond.h"
+#include "orb1.h"
+#include "orb2.h"
+#include "orb3.h"
+#include <zero.h>
 #include <one.h>
 #include <two.h>
 #include <three.h>
@@ -25,7 +31,7 @@
 #include <seven.h>
 #include <eight.h>
 #include <nine.h>
-#include <zero.h>
+
 
 
 // Regesters
@@ -65,6 +71,8 @@ int hearts = 3;
 int time_digit = 9;
 int time_tens = 9;
 int t = 0;
+
+
 void printf1(char *str) {
 	uart_puts(str);
 }
@@ -197,7 +205,7 @@ int mainMenu(){
 
 void challengeOne(){
 
-    fillScreen(black);
+    fillScreen(0x0);
     makingGrid();
     trackScore();
     time_digit = 9;
@@ -337,6 +345,7 @@ void checkHearts(){
     }
     trackScore();
 }
+
 
 void makingGrid(){
     for (int i= 0; i<32; i++){
@@ -605,13 +614,13 @@ void makingGrid2(){
                 clearingSand(i,j);
             }
             if ((i==6 && j==20) || (i==12 && j==8) || (i==23 && j==18) || (i==2 && j==8) || (i==37 && j==6)){
-                //drawingTrees(i,j);
-            }else if (i==33 && j==20){
-                //drwaingPond(i,j);
+                drawImage(tree.pixel_data, tree.width, tree.height, i*32, j*32);
             }
             drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0x0, 0);
         }
     }
+    drawImage(pond.pixel_data, pond.width, pond.height, 33*32, 11*32);
+    drawImage(pond.pixel_data, pond.width, pond.height, 12*32, 18*32);
 }
 
 void clearingSand(int i, int j){
