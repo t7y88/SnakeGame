@@ -21,6 +21,7 @@
 #include "orb1.h"
 #include "orb2.h"
 #include "orb3.h"
+#include "log.h"
 #include <zero.h>
 #include <one.h>
 #include <two.h>
@@ -71,7 +72,7 @@ int hearts = 3;
 int time_digit = 9;
 int time_tens = 9;
 int t = 0;
-int selected = 0;
+
 
 void printf1(char *str) {
 	uart_puts(str);
@@ -152,14 +153,7 @@ int READ_INPUT(){
         }
         //drawRect(timer, timer, (timer+1)*32, (timer+1)*32, 0xFFFFFF, 1);
     }
-    while(release != 0) {
-        release = READ_SNES();
-        t++;
-        if (t == 5000){
-            timer();
-            t = 0;
-        }
-    }
+    while(release != 0) release = READ_SNES();
     return pressed;
 }
 
@@ -215,15 +209,14 @@ void challengeOne(){
     fillScreen(0x0);
     makingGrid();
     trackScore();
-    time_digit = 5;
-    time_tens = 0;
+    time_digit = 9;
+    time_tens = 9;
     int input;
 
     while(1){ 
         
         input = READ_INPUT();
         if (input == 3){
-            selected = 0;
             return;
         }else if (input == 8){
             if (snakeBuffer[0]<30){
@@ -270,6 +263,9 @@ void challengeOne(){
         }
         checkKeys();
         checkHearts();
+        updateBomb(0);
+        updateBomb(1);
+        updateBomb(2);
     }
 }
 
@@ -466,99 +462,93 @@ void updateBomb(int n) {
 }
 
 void timer() {
-    int x = 1056;
-    int y = 32;
-    if (selected == 0) return;
     time_digit--;
     if (time_digit == -1){
         time_digit = 9;
         time_tens--;
     }
-    if (selected == 1) {
-        updateBomb(0);
-        updateBomb(1);
-        updateBomb(2);
-    }
-
     if (time_tens == 9) {
-        drawImage(nine.pixel_data, nine.width, nine.height, x, y);
+        drawImage(nine.pixel_data, nine.width, nine.height, 1136, 100);
     }
     if (time_tens == 8) {
-        drawImage(eight.pixel_data, eight.width, eight.height, x, y);
+        drawImage(eight.pixel_data, eight.width, eight.height, 1136, 100);
     }
     if (time_tens == 7) {
-        drawImage(seven.pixel_data, seven.width, seven.height, x, y);
+        drawImage(seven.pixel_data, seven.width, seven.height, 1136, 100);
     }
     if (time_tens == 6) {
-        drawImage(six.pixel_data, six.width, six.height, x, y);
+        drawImage(six.pixel_data, six.width, six.height, 1136, 100);
     }
     if (time_tens == 5) {
-        drawImage(five.pixel_data, five.width, five.height, x, y);
+        drawImage(five.pixel_data, five.width, five.height, 1136, 100);
     }
     if (time_tens == 4) {
-        drawImage(four.pixel_data, four.width, four.height, x, y);
+        drawImage(four.pixel_data, four.width, four.height, 1136, 100);
     }
     if (time_tens == 3) {
-        drawImage(three.pixel_data, three.width, three.height, x, y);
+        drawImage(three.pixel_data, three.width, three.height, 1136, 100);
     }
     if (time_tens == 2) {
-        drawImage(two.pixel_data, two.width, two.height, x, y);
+        drawImage(two.pixel_data, two.width, two.height, 1136, 100);
     }
     if (time_tens == 1) {
-        drawImage(one.pixel_data, one.width, one.height, x, y);
+        drawImage(one.pixel_data, one.width, one.height, 1136, 100);
     }
     if (time_tens == 0) {
-        drawImage(zero.pixel_data, zero.width, zero.height, x, y);
+        drawImage(zero.pixel_data, zero.width, zero.height, 1136, 100);
     }
     if (time_digit == 9) {
-        drawImage(nine.pixel_data, nine.width, nine.height, x + 64, y);
+        drawImage(nine.pixel_data, nine.width, nine.height, 1200, 100);
     }
     if (time_digit == 8) {
-        drawImage(eight.pixel_data, eight.width, eight.height, x + 64, y);
+        drawImage(eight.pixel_data, eight.width, eight.height, 1200, 100);
     }
     if (time_digit == 7) {
-        drawImage(seven.pixel_data, seven.width, seven.height, x + 64, y);
+        drawImage(seven.pixel_data, seven.width, seven.height, 1200, 100);
     }
     if (time_digit == 6) {
-        drawImage(six.pixel_data, six.width, six.height, x + 64, y);
+        drawImage(six.pixel_data, six.width, six.height, 1200, 100);
     }
     if (time_digit == 5) {
-        drawImage(five.pixel_data, five.width, five.height, x + 64, y);
+        drawImage(five.pixel_data, five.width, five.height, 1200, 100);
     }
     if (time_digit == 4) {
-        drawImage(four.pixel_data, four.width, four.height, x + 64, y);
+        drawImage(four.pixel_data, four.width, four.height, 1200, 100);
     }
     if (time_digit == 3) {
-        drawImage(three.pixel_data, three.width, three.height, x + 64, y);
+        drawImage(three.pixel_data, three.width, three.height, 1200, 100);
     }
     if (time_digit == 2) {
-        drawImage(two.pixel_data, two.width, two.height, x + 64, y);
+        drawImage(two.pixel_data, two.width, two.height, 1200, 100);
     }
     if (time_digit == 1) {
-        drawImage(one.pixel_data, one.width, one.height, x + 64, y);
+        drawImage(one.pixel_data, one.width, one.height, 1200, 100);
     }
     if (time_digit == 0) {
-        drawImage(zero.pixel_data, zero.width, zero.height, x + 64, y);
+        drawImage(zero.pixel_data, zero.width, zero.height, 1200, 100);
     }
-    if (time_digit == 0 && time_tens == 0){
-        gameOver();
-    } 
 }
 
 abuffer[4][2] = {{0,20}, {0,21},{0,22}, {0,23}};
 
 void challengeTwo(){
+    
     fillScreen(0x0);
     makingGrid2();
-    time_digit = 9;
-    time_tens = 9;
     int input;
+    abuffer[0][0] = 0; //starts at zero everytime
+    abuffer[1][0] = 0;
+    abuffer[2][0] = 0;
+    abuffer[3][0] = 0;
+    abuffer[0][1] = 20;
+    abuffer[1][1] = 21;
+    abuffer[2][1] = 22;
+    abuffer[3][1] = 23;
 
     while(1){ 
         
         input = READ_INPUT();
         if (input == 3){
-            selected = 0;
             return;
         }else if (input==8){
             if (abuffer[0][0]<39){
@@ -629,21 +619,28 @@ void makingGrid2(){
         for (int j=6; j<24; j++){
             if ((i == abuffer[0][0] && j == abuffer[0][1]) || (i == abuffer[1][0] && j == abuffer[1][1]) || (i == abuffer[2][0] && j == abuffer[2][1]) || (i == abuffer[3][0] && j == abuffer[3][1])){
                 drawingAnaconda(i, j);
-            }else{
+            }else if ((i==6 && j==20) || (i==12 && j==8) || (i==23 && j==18) || (i==2 && j==9) || (i==33 && j==7) || (i==7 && j==12) || (i==29 && j==14)|| (i==17 && j==21) || (i==21 && j==15) || (i==14 && j==14) || (i==17 && j==7) || (i==35 && j==21)){
+                drawImage(tree.pixel_data, tree.width, tree.height, i*32, j*32);
+            }else if ((i==23 && j==10) || (i==2 && j==16) || (i==32 && j==19)){
+                drawImage(log.pixel_data, log.width, log.height, i*32+1, j*32+1);
+            }else if ((i==24 && j==10) || (i==3 && j==16)|| (i==33 && j==19)){
+                continue;
+            }else if ();
+            else{
                 clearingSand(i,j);
             }
-            if ((i==6 && j==20) || (i==12 && j==8) || (i==23 && j==18) || (i==2 && j==8) || (i==37 && j==6)){
-                drawImage(tree.pixel_data, tree.width, tree.height, i*32, j*32);
+            if (!((i==24 && j==10) || (i==3 && j==16)|| (i==33 && j==19) || (i==23 && j==10) || (i==2 && j==16) || (i==32 && j==19))){
+                drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0x0, 0);
             }
-            drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0x0, 0);
         }
-    }
-    drawImage(pond.pixel_data, pond.width, pond.height, 33*32, 11*32);
-    drawImage(pond.pixel_data, pond.width, pond.height, 12*32, 18*32);
+    }      
+    drawImage(pond.pixel_data, pond.width, pond.height, 33*32+1, 11*32+1);
+    drawImage(pond.pixel_data, pond.width, pond.height, 12*32+1, 18*32+1);
 }
 
 void clearingSand(int i, int j){
     drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0xFDFD96, 1);
+    drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0x0, 0);
 }
 
 void drawingAnaconda(int i, int j){
@@ -653,15 +650,6 @@ void drawingAnaconda(int i, int j){
         drawRect((abuffer[1][0])*32, (abuffer[1][1])*32, ((abuffer[1][0])+1)*32, ((abuffer[1][1])+1)*32, 0x0, 1);
         drawRect((abuffer[2][0])*32, (abuffer[2][1])*32, ((abuffer[2][0])+1)*32, ((abuffer[2][1])+1)*32, 0x0, 1);
         drawRect((abuffer[3][0])*32, (abuffer[3][1])*32, ((abuffer[3][0])+1)*32, ((abuffer[3][1])+1)*32, 0x0, 1);
-    }
-}
-
-void gameOver() {
-    fillScreen(0x0);
-    while (1) {
-        if (READ_INPUT() == 9) {
-            return;
-        }
     }
 }
 
@@ -675,6 +663,7 @@ int main()
     init_framebuffer();
 
     Init_GPIO();
+    int selected;
     while(1){
         selected = mainMenu();
         if (selected == 1){
