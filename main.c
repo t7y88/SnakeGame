@@ -33,7 +33,6 @@
 #include <eight.h>
 #include <nine.h>
 
-
 // Regesters
 #define CLO_REG 0xFE003004
 #define GPIO_BASE 0xFE200000 
@@ -68,10 +67,8 @@ int bombbuffer[3][2] = {{6,2}, {11,16}, {17,10}};
 int bombclearing[3][3];
 int keys = 0;
 int hearts = 3;
-int time_digit = 9;
-int time_tens = 9;
+int time = 99;
 int t = 0;
-int points = 0;
 int selected = 0;
 
 void printf1(char *str) {
@@ -227,8 +224,7 @@ void challengeOne(){
     keyBuffer[1][1] = 2;
     keyBuffer[2][0] = 3;
     keyBuffer[2][1] = 20;
-    time_digit = 9;
-    time_tens = 9;
+    time = 99;
     int input;
     fillScreen(0x0);
     makingGrid();
@@ -289,19 +285,20 @@ void challengeOne(){
         checkKeys();
         checkHearts();
         checkVictory();
+
     }
 }
 void spawnHearts() {
     // making hearts
     // heart location 26 13 at 85 and 5 and 16 at 80
-    if ((time_digit == 5) && (time_tens == 8)) {
+    if (time == 85) {
         heartBuffer[0][0] = 26;
         heartBuffer[0][1] = 13;
         drawImage(heart.pixel_data, heart.width, heart.height, 26*32, 13*32);
         drawRect(26*32, 13*32, (26+1)*32, 13*32, white, 1);
         drawRect(26*32, 13*32, 26*32, (13+1)*32, white, 1);
     }
-    if ((time_digit == 0) && (time_tens == 8)) {
+    if (time == 80) {
         heartBuffer[0][0] = 5;
         heartBuffer[0][1] = 16;
         drawImage(heart.pixel_data, heart.width, heart.height, 5*32, 16*32);
@@ -310,8 +307,46 @@ void spawnHearts() {
     }    
 }
 
-void score() {
-    int score_thousands = points/1000;
+
+void drawNum(int num, int x, int y) {
+    int n = 0;
+    int digit;   
+    while (num > 0) {
+        digit = num % 10;
+        if (digit == 9) {
+            drawImage(nine.pixel_data, nine.width, nine.height, x - (n * 64), y);
+        }
+        if (digit == 8) {
+            drawImage(eight.pixel_data, eight.width, eight.height, x - (n * 64), y);
+        }
+        if (digit == 7) {
+            drawImage(seven.pixel_data, seven.width, seven.height, x - (n * 64), y);
+        }
+        if (digit == 6) {
+            drawImage(six.pixel_data, six.width, six.height, x - (n * 64), y);
+        }
+        if (digit == 5) {
+            drawImage(five.pixel_data, five.width, five.height, x - (n * 64), y);
+        }
+        if (digit == 4) {
+            drawImage(four.pixel_data, four.width, four.height, x - (n * 64), y);
+        }
+        if (digit == 3) {
+            drawImage(three.pixel_data, three.width, three.height, x - (n * 64), y);
+        }
+        if (digit == 2) {
+            drawImage(two.pixel_data, two.width, two.height, x - (n * 64), y);
+        }
+        if (digit == 1) {
+            drawImage(one.pixel_data, one.width, one.height, x - (n * 64), y);
+        }
+        if (digit == 0) {
+            drawImage(zero.pixel_data, zero.width, zero.height, x - (n * 64), y);
+        }
+        num = num / 10;
+        n++;
+    }
+
 }
 
 void drawingSnake(int x, int y){
@@ -399,6 +434,8 @@ void checkVictory(){
     if (keys != 3) return; 
     if ((snakeBuffer[0] == 30) && (snakeBuffer[1] == 22)){
         fillScreen(white);
+        int score = time * 10 + hearts * 100;
+        drawNum(score, resolutionWidth/2 - 64 * 4, resolutionHight/2);
         selected = 0;
     } 
 }
@@ -513,84 +550,20 @@ void updateBomb(int n) {
 }
 
 void timer() {
-    int x = 1056;
-    int y = 32;
+    int score;
     if (selected == 0) return;
-    time_digit--;
-    if (time_digit == -1){
-        time_digit = 9;
-        time_tens--;
-    }
+    time--;
     if (selected == 1) {
         updateBomb(0);
         updateBomb(1);
         updateBomb(2);
         spawnHearts();
+        score = time * 10 + hearts * 100;
+        drawNum(score, 1217, 639);
     }
-    if (time_digit < 10) {
-        drawImage(nine.pixel_data, nine.width, nine.height, x, y);
-    }
-    if (time_tens == 9) {
-        drawImage(nine.pixel_data, nine.width, nine.height, x, y);
-    }
-    if (time_tens == 8) {
-        drawImage(eight.pixel_data, eight.width, eight.height, x, y);
-    }
-    if (time_tens == 7) {
-        drawImage(seven.pixel_data, seven.width, seven.height, x, y);
-    }
-    if (time_tens == 6) {
-        drawImage(six.pixel_data, six.width, six.height, x, y);
-    }
-    if (time_tens == 5) {
-        drawImage(five.pixel_data, five.width, five.height, x, y);
-    }
-    if (time_tens == 4) {
-        drawImage(four.pixel_data, four.width, four.height, x, y);
-    }
-    if (time_tens == 3) {
-        drawImage(three.pixel_data, three.width, three.height, x, y);
-    }
-    if (time_tens == 2) {
-        drawImage(two.pixel_data, two.width, two.height, x, y);
-    }
-    if (time_tens == 1) {
-        drawImage(one.pixel_data, one.width, one.height, x, y);
-    }
-    if (time_tens == 0) {
-        drawImage(zero.pixel_data, zero.width, zero.height, x, y);
-    }
-    if (time_digit == 9) {
-        drawImage(nine.pixel_data, nine.width, nine.height, x + 64, y);
-    }
-    if (time_digit == 8) {
-        drawImage(eight.pixel_data, eight.width, eight.height, x + 64, y);
-    }
-    if (time_digit == 7) {
-        drawImage(seven.pixel_data, seven.width, seven.height, x + 64, y);
-    }
-    if (time_digit == 6) {
-        drawImage(six.pixel_data, six.width, six.height, x + 64, y);
-    }
-    if (time_digit == 5) {
-        drawImage(five.pixel_data, five.width, five.height, x + 64, y);
-    }
-    if (time_digit == 4) {
-        drawImage(four.pixel_data, four.width, four.height, x + 64, y);
-    }
-    if (time_digit == 3) {
-        drawImage(three.pixel_data, three.width, three.height, x + 64, y);
-    }
-    if (time_digit == 2) {
-        drawImage(two.pixel_data, two.width, two.height, x + 64, y);
-    }
-    if (time_digit == 1) {
-        drawImage(one.pixel_data, one.width, one.height, x + 64, y);
-    }
-    if (time_digit == 0) {
-        drawImage(zero.pixel_data, zero.width, zero.height, x + 64, y);
-    }
-    if (time_digit == 0 && time_tens == 0){
+    drawNum(time, 1089, 32);
+    score = time * 10 + hearts * 100;
+    if (time == 0){
         gameOver();
     } 
 }
@@ -600,8 +573,7 @@ abuffer[4][2] = {{0,20}, {0,21},{0,22}, {0,23}};
 void challengeTwo(){
     fillScreen(0x0);
     makingGrid2();
-    time_digit = 9;
-    time_tens = 9;
+    time = 99;
     int input;
     abuffer[0][0] = 0; //starts at zero everytime
     abuffer[1][0] = 0;
