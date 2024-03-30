@@ -32,6 +32,12 @@
 #include <seven.h>
 #include <eight.h>
 #include <nine.h>
+#include <timerText.h>
+#include <scoreText.h>
+#include <lives.h>
+#include <keyText.h>
+#include <livesText.h>
+#include <menuKey.h>
 
 // Regesters
 #define CLO_REG 0xFE003004
@@ -52,6 +58,7 @@ static unsigned *gpio = (unsigned*)GPIO_BASE; // GPIO base
 #define black 0x0
 #define cyan 0x7FFFFF
 #define white 0xFFFFFF
+#define darkBlue 0x19102D
 
 // resolution 1920 × 1080
 #define resolutionWidth 1363
@@ -144,7 +151,7 @@ int READ_INPUT(){
     while(pressed == 0) {
         pressed = READ_SNES();
         t++;
-        if (t == 5000){
+        if (t == 3000){
             timer();
             t = 0;
         }
@@ -153,12 +160,37 @@ int READ_INPUT(){
     while(release != 0) {
         release = READ_SNES();
         t++;
-        if (t == 5000){
+        if (t == 3000){
             timer();
             t = 0;
         }
     }
     return pressed;
+}
+
+void timer() {
+    int score;
+    if (selected == 0) return;
+    time--;
+    if (time < 10) {
+        drawRect(1153 - 64, 71, 1153, 71 + 128, darkBlue, 1);
+    }
+    drawNum(time, 1153, 71);
+    if (time == 0){
+        gameOver();
+    } 
+    if (selected == 1) {
+        updateBomb(0);
+        updateBomb(1);
+        updateBomb(2);
+        spawnHearts();
+        score = time * 10 + hearts * 100;
+        if (score < 1000) {
+            drawRect(1025, 639, 1025 + 64, 639 + 128, darkBlue, 1);
+        }
+        drawNum(score, 1217, 639);
+        trackScore();
+    }
 }
 
 // Menu snake location definition
@@ -171,8 +203,10 @@ int READ_INPUT(){
 
 
 int mainMenu(){
-    fillScreen(cyan);
-    drawImage(title.pixel_data, title.width, title.height, resolutionWidth/2 - title.width/2, resolutionHight/4);
+
+    fillScreen(darkBlue);
+
+    drawImage(title.pixel_data, title.width, title.height, resolutionWidth/2 - title.width/2 - title.width/10, resolutionHight/4);
     drawImage(challenge1.pixel_data, challenge1.width, challenge1.height, resolutionWidth/4 - challenge1.width/2, resolutionHight/2);
     drawImage(challenge2.pixel_data, challenge2.width, challenge2.height, 3 * resolutionWidth/4 - challenge2.width/2, resolutionHight/2);
     drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, snakeXLeft, snakeYMid);
@@ -228,6 +262,11 @@ void challengeOne(){
     int input;
     fillScreen(0x0);
     makingGrid();
+    drawRect(1025, 0, 1280, 767, darkBlue, 1);
+    drawImage(timerText.pixel_data, timerText.width, timerText.height, 1025,0);
+    drawImage(keyText.pixel_data, keyText.width, keyText.height, 1025, 199);
+    drawImage(livesText.pixel_data, livesText.width, livesText.height, 1025, 384); // sprite height of 73
+    drawImage(scoreText.pixel_data, scoreText.width, scoreText.height, 1025,566);
     trackScore();
     while(1){ 
         
@@ -299,8 +338,8 @@ void spawnHearts() {
         drawRect(26*32, 13*32, 26*32, (13+1)*32, white, 1);
     }
     if (time == 80) {
-        heartBuffer[0][0] = 5;
-        heartBuffer[0][1] = 16;
+        heartBuffer[1][0] = 5;
+        heartBuffer[1][1] = 16;
         drawImage(heart.pixel_data, heart.width, heart.height, 5*32, 16*32);
         drawRect(5*32, 16*32, (5+1)*32, 16*32, white, 1);
         drawRect(5*32, 16*32, 5*32, (16+1)*32, white, 1);
@@ -360,50 +399,18 @@ void clearingSquare(int x, int y){
 }
 
 void trackScore(){
-    drawRect(34 * 32, 12 * 32, 34 * 32 + heart.width * 5, 12 * 32 + heart.height, black, 1);
-    for (int i= 32; i<40; i++){
-        for (int j=0; j<24; j++){
-            if (i==34 && j==7){
-                if (keys == 1){
-                    drawImage(key.pixel_data, key.width, key.height, i*32, j*32);
-                }else if (keys == 2){
-                    drawImage(key.pixel_data, key.width, key.height, i*32, j*32);
-                    drawImage(key.pixel_data, key.width, key.height, (i+1)*32, (j)*32);
-                }else if (keys == 3){
-                    drawImage(key.pixel_data, key.width, key.height, i*32, j*32);
-                    drawImage(key.pixel_data, key.width, key.height, (i+1)*32, (j)*32);
-                    drawImage(key.pixel_data, key.width, key.height, (i+2)*32, (j)*32);
-                }
-            }
-            if (i==34 && j==12){
-                if (hearts == 0){
-                    gameOver();
-                }
-                else if (hearts == 1){
-                   drawImage(heart.pixel_data, heart.width, heart.height, i*32, j*32);
-                }
-                else if (hearts == 2){
-                    drawImage(heart.pixel_data, heart.width, heart.height, i*32, j*32);
-                    drawImage(heart.pixel_data, heart.width, heart.height, (i+1)*32, j*32);
-                }else if (hearts == 3){
-                    drawImage(heart.pixel_data, heart.width, heart.height, i*32, j*32);
-                    drawImage(heart.pixel_data, heart.width, heart.height, (i+1)*32, j*32);
-                    drawImage(heart.pixel_data, heart.width, heart.height, (i+2)*32, j*32);
-                }else if (hearts == 4){
-                    drawImage(heart.pixel_data, heart.width, heart.height, i*32, j*32);
-                    drawImage(heart.pixel_data, heart.width, heart.height, (i+1)*32, j*32);
-                    drawImage(heart.pixel_data, heart.width, heart.height, (i+2)*32, j*32);
-                    drawImage(heart.pixel_data, heart.width, heart.height, (i+3)*32, j*32);
-                }else{
-                    drawImage(heart.pixel_data, heart.width, heart.height, i*32, j*32);
-                    drawImage(heart.pixel_data, heart.width, heart.height, (i+1)*32, j*32);
-                    drawImage(heart.pixel_data, heart.width, heart.height, (i+2)*32, j*32);
-                    drawImage(heart.pixel_data, heart.width, heart.height, (i+3)*32, j*32);
-                    drawImage(heart.pixel_data, heart.width, heart.height, (i+4)*32, j*32);
-                }
-            }
-        }
+    //drawRect(34 * 32, 12 * 32, 34 * 32 + heart.width * 5, 12 * 32 + heart.height, black, 1);
+    for (int i = 0; i < keys; i++){
+        drawImage(menuKey.pixel_data, menuKey.width, menuKey.height, 1025 + 85 * i, 284);
     }
+    drawRect(1275 - (5 - hearts) * 50, 457, 1275, 507, darkBlue, 1);
+    for (int i = 0; i < hearts; i++){
+        drawImage(lives.pixel_data, lives.width, lives.height, 1025 + 50 * i, 457);
+    }
+    if (hearts == 0){
+        gameOver();
+    }
+
 }
 
 void checkKeys(){
@@ -549,24 +556,6 @@ void updateBomb(int n) {
     }
 }
 
-void timer() {
-    int score;
-    if (selected == 0) return;
-    time--;
-    if (selected == 1) {
-        updateBomb(0);
-        updateBomb(1);
-        updateBomb(2);
-        spawnHearts();
-        score = time * 10 + hearts * 100;
-        drawNum(score, 1217, 639);
-    }
-    drawNum(time, 1089, 32);
-    score = time * 10 + hearts * 100;
-    if (time == 0){
-        gameOver();
-    } 
-}
 
 abuffer[4][2] = {{0,20}, {0,21},{0,22}, {0,23}};
 
