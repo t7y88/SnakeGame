@@ -196,7 +196,7 @@ void timer() {
 // Menu snake location definition
 #define snakeXLeft resolutionWidth/4 - challenge1.width/2 - snakeHeadRight.width
 #define snakeXRight 3 * resolutionWidth/4 - challenge2.width/2 - snakeHeadRight.width
-#define snakeXMid resolutionWidth/2 - title.width/2 + title.width/6 - snakeHeadRight.width
+#define snakeXMid resolutionWidth/2 - title.width/2 + title.width/3 - snakeHeadRight.width
 #define snakeYMid resolutionHight/2
 #define snakeYDown 3 * resolutionHight/4
 
@@ -210,29 +210,29 @@ int mainMenu(){
     drawImage(challenge1.pixel_data, challenge1.width, challenge1.height, resolutionWidth/4 - challenge1.width/2, resolutionHight/2);
     drawImage(challenge2.pixel_data, challenge2.width, challenge2.height, 3 * resolutionWidth/4 - challenge2.width/2, resolutionHight/2);
     drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, snakeXLeft, snakeYMid);
-    drawImage(quit.pixel_data, quit.width, quit.height, resolutionWidth/2 - title.width/2 + title.width/6, 3 * resolutionHight/4);
+    drawImage(quit.pixel_data, quit.width, quit.height, resolutionWidth/2 - title.width/2 + title.width/3, 3 * resolutionHight/4);
     int selected = 1;
     while(1){
         int input = READ_INPUT();
         // move right
         if (input == 8) {
             drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, snakeXRight, snakeYMid);
-            drawRect(snakeXLeft, snakeYMid, snakeXLeft + snakeHeadRight.width, snakeYMid + snakeHeadRight.height, cyan, 1); //left
-            drawRect(snakeXMid, snakeYDown, snakeXMid + snakeHeadRight.width, snakeYDown + snakeHeadRight.height, cyan, 1); //down
+            drawRect(snakeXLeft, snakeYMid, snakeXLeft + snakeHeadRight.width, snakeYMid + snakeHeadRight.height, darkBlue, 1); //left
+            drawRect(snakeXMid, snakeYDown, snakeXMid + snakeHeadRight.width, snakeYDown + snakeHeadRight.height, darkBlue, 1); //down
             selected = 2;
         }
         // move left
         if (input == 7) {
             drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, snakeXLeft, snakeYMid);
-            drawRect(snakeXMid, snakeYDown, snakeXMid + snakeHeadRight.width, snakeYDown + snakeHeadRight.height, cyan, 1); //down
-            drawRect(snakeXRight, snakeYMid, snakeXRight + snakeHeadRight.width, snakeYMid + snakeHeadRight.height, cyan, 1); //right
+            drawRect(snakeXMid, snakeYDown, snakeXMid + snakeHeadRight.width, snakeYDown + snakeHeadRight.height, darkBlue, 1); //down
+            drawRect(snakeXRight, snakeYMid, snakeXRight + snakeHeadRight.width, snakeYMid + snakeHeadRight.height, darkBlue, 1); //right
             selected = 1;
         }
         //move down
         if (input == 6) {
             drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, snakeXMid, snakeYDown);
-            drawRect(snakeXLeft, snakeYMid, snakeXLeft + snakeHeadRight.width, snakeYMid + snakeHeadRight.height, cyan, 1); //left
-            drawRect(snakeXRight, snakeYMid, snakeXRight + snakeHeadRight.width, snakeYMid + snakeHeadRight.height, cyan, 1); //right
+            drawRect(snakeXLeft, snakeYMid, snakeXLeft + snakeHeadRight.width, snakeYMid + snakeHeadRight.height, darkBlue, 1); //left
+            drawRect(snakeXRight, snakeYMid, snakeXRight + snakeHeadRight.width, snakeYMid + snakeHeadRight.height, darkBlue, 1); //right
             selected = 3;
         }
         if (input == 9) {
