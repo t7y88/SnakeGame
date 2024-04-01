@@ -38,6 +38,8 @@
 #include <keyText.h>
 #include <livesText.h>
 #include <menuKey.h>
+#include <eagle.h>
+#include <crocs.h>
 
 // Regesters
 #define CLO_REG 0xFE003004
@@ -558,6 +560,12 @@ void updateBomb(int n) {
 
 
 abuffer[4][2] = {{0,20}, {0,21},{0,22}, {0,23}};
+crocsBuffer[4][2] = {{0,18}, {3,9}, {14,15}, {18,21}};
+eagleBuffer[4][2] = {{7,12}, {17,8}, {23,11}, {33,8}};
+orb1buffer[2][2] = {{4,7}, {17,19}};
+orb2buffer[2][2] = {{19,10}, {29,18}};
+orb3buffer[1][2] = {{36,7}};
+
 
 void challengeTwo(){
     fillScreen(0x0);
@@ -654,6 +662,18 @@ void makingGrid2(){
                 drawImage(log.pixel_data, log.width, log.height, i*32+1, j*32+1);
             }else if ((i==24 && j==10) || (i==3 && j==16)|| (i==33 && j==19)){
                 continue;
+            }else if((i==crocsBuffer[0][0] && j==crocsBuffer[0][1]) || (i==crocsBuffer[1][0] && j==crocsBuffer[1][1]) || (i==crocsBuffer[2][0] && j==crocsBuffer[2][1]) || (i==crocsBuffer[3][0] && j==crocsBuffer[3][1])){
+                drawImage(crocs.pixel_data, crocs.width, crocs.height, i*32, j*32); // Horizontal Crocs 
+                // Make it move horizontally
+            }else if((i==eagleBuffer[0][0] && j==eagleBuffer[0][1]) || (i==eagleBuffer[1][0] && j==eagleBuffer[1][1]) || (i==eagleBuffer[2][0] && j==eagleBuffer[2][1]) || (i==eagleBuffer[3][0] && j==eagleBuffer[3][1])){
+                drawImage(eagle.pixel_data, eagle.width, eagle.height, i*32, j*32); // Vertical eagles 
+            }else if ((i==4 && j==7) || (i==17 && j==19)){
+                drawImage(orb1.pixel_data, orb1.width, orb1.height, i*32+1, j*32+1);
+            }else if ((i==19 && j==10) || (i==29 && j==18)){
+                drawImage(orb2.pixel_data, orb2.width, orb2.height, i*32+1, j*32+1);
+            }else if ((i==36 && j==7)){
+                drawImage(orb3.pixel_data, orb3.width, orb3.height, i*32+1, j*32+1);
+                
             }else{
                 clearingSand(i,j);
             }
@@ -710,3 +730,16 @@ int main() {
     }
     return 0;
 }   
+
+
+
+/*  
+    Add eagle and Crocs  -> DONE
+    Add orbs have a buffer for each of them -> DONE
+    Add superqualities to them -> Score increase, freeze time and lives  
+    Add eagle if eagle buffer is same as the buffe of snake (any postion) loose a live
+    Make pond smaller by one pixel both sides
+    Add a clock power up
+    I wanna make the snake not goto the tile its body is on and the objects too
+    rules for both levels 
+ */
