@@ -38,8 +38,13 @@
 #include <keyText.h>
 #include <livesText.h>
 #include <menuKey.h>
+#include <victoryText.h>
+#include <returnText.h>
+#include <gameOverText.h>
+#include <returnTextBlack.h>
 #include <eagle.h>
 #include <crocs.h>
+#include <stopWatch.h>
 
 // Regesters
 #define CLO_REG 0xFE003004
@@ -61,6 +66,7 @@ static unsigned *gpio = (unsigned*)GPIO_BASE; // GPIO base
 #define cyan 0x7FFFFF
 #define white 0xFFFFFF
 #define darkBlue 0x19102D
+#define sandColor 0xFDFD96
 
 // resolution 1920 × 1080
 #define resolutionWidth 1363
@@ -174,10 +180,6 @@ void timer() {
     int score;
     if (selected == 0) return;
     time--;
-    if (time < 10) {
-        drawRect(1153 - 64, 71, 1153, 71 + 128, darkBlue, 1);
-    }
-    drawNum(time, 1153, 71);
     if (time == 0){
         gameOver();
     } 
@@ -191,7 +193,23 @@ void timer() {
             drawRect(1025, 639, 1025 + 64, 639 + 128, darkBlue, 1);
         }
         drawNum(score, 1217, 639);
+        if (time < 10) {
+            drawRect(1153 - 64, 71, 1153, 71 + 128, darkBlue, 1);
+        }
+        drawNum(time, 1153, 71);
         trackScore();
+    }
+    if (selected == 2) {
+        if (time < 10) {
+            drawRect(1153 - 64, 64, 1153, 64 + 128, darkBlue, 1);
+        }
+        drawNum(time, 1153, 64);
+        score = time * 10;
+        if (score < 1000) {
+            drawRect(0, 64, 0 + 64, 64 + 128, darkBlue, 1);
+        }
+        drawNum(score, 192, 64);
+
     }
 }
 
@@ -285,7 +303,7 @@ void challengeOne(){
                 int j = snakeBuffer[1];
                 
                 // Hard coded the conditions so the snake doesnt go through the walls
-                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
+                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7) || ((i == 30 && j == 22) && keys < 3))){
                     clearingSquare(snakeBuffer[0],snakeBuffer[1]);
                     snakeBuffer[0]++;
                     drawingSnake(snakeBuffer[0],snakeBuffer[1]);
@@ -295,7 +313,7 @@ void challengeOne(){
             if (snakeBuffer[0]>1){
                 int i = snakeBuffer[0]-1;
                 int j = snakeBuffer[1];
-                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
+                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7) || ((i == 30 && j == 22) && keys < 3))){
                     clearingSquare(snakeBuffer[0],snakeBuffer[1]);
                     snakeBuffer[0]--;
                     drawingSnake(snakeBuffer[0],snakeBuffer[1]);
@@ -305,7 +323,7 @@ void challengeOne(){
             if (snakeBuffer[1]<22){
                 int i = snakeBuffer[0];
                 int j = snakeBuffer[1]+1;
-                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
+                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7) || ((i == 30 && j == 22) && keys < 3))){
                     clearingSquare(snakeBuffer[0],snakeBuffer[1]);
                     snakeBuffer[1]++;
                     drawingSnake(snakeBuffer[0],snakeBuffer[1]);
@@ -315,7 +333,7 @@ void challengeOne(){
             if (snakeBuffer[1]>1 ){
                 int i = snakeBuffer[0];
                 int j = snakeBuffer[1]-1;
-                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7))){
+                if(!((i==10 && (j<8 && j>0)) || (i==21 && (j<5 && j>0)) || (i==4 && (j<10 && j>6)) || (i==24 && (j<16 && j>11)) || (i==7 && (j<22 && j>14)) || (i==17 && (j<23 && j>15)) || (i==13 && (j<13 && j>4)) ||  ((i>0 && i<7) && j==6) || ((i>0 && i<17) && j==13) || ((i>0 && i<10) && j==18) || ((i>23 && i<29) && j==11) || ((i>20 && i<31) && j==16) || ((i>15 && i<31) && j==7) || ((i == 30 && j == 22) && keys < 3))){
                     clearingSquare(snakeBuffer[0],snakeBuffer[1]);
                     snakeBuffer[1]--;
                     drawingSnake(snakeBuffer[0],snakeBuffer[1]);
@@ -440,12 +458,14 @@ void checkHearts(){
 }
 
 void checkVictory(){
-    if (keys != 3) return; 
     if ((snakeBuffer[0] == 30) && (snakeBuffer[1] == 22)){
-        fillScreen(white);
+        fillScreen(darkBlue);
+        drawImage(victoryText.pixel_data,victoryText.width,victoryText.height,resolutionWidth/2 - victoryText.width/2, resolutionHight/4);
+        drawImage(scoreText.pixel_data,scoreText.width, scoreText.height, resolutionWidth/2 - scoreText.width, resolutionHight/2);
+        drawImage(returnText.pixel_data,returnText.width, returnText.height, resolutionWidth/2 - returnText.width/2, 3 * resolutionHight/4);
         int score = time * 10 + hearts * 100;
-        drawNum(score, resolutionWidth/2 - 64 * 4, resolutionHight/2);
-        selected = 0;
+        drawNum(score, resolutionWidth/2 + (64 * 4), resolutionHight/2);
+        selected = 0;   
     } 
 }
 
@@ -565,11 +585,13 @@ eagleBuffer[4][2] = {{7,12}, {17,8}, {23,11}, {33,8}};
 orb1buffer[2][2] = {{4,7}, {17,19}};
 orb2buffer[2][2] = {{19,10}, {29,18}};
 orb3buffer[1][2] = {{36,7}};
-
+stopWatchBuffer[1][2] = {{28, 9}};
 
 void challengeTwo(){
     fillScreen(0x0);
     makingGrid2();
+    drawImage(timerText.pixel_data, timerText.width, timerText.height, 1025, 0);
+    drawImage(scoreText.pixel_data, scoreText.width, scoreText.height, 0, 0);
     time = 99;
     int input;
     abuffer[0][0] = 0; //starts at zero everytime
@@ -592,7 +614,7 @@ void challengeTwo(){
                 int j = abuffer[0][1];
                 int i = abuffer[0][0]+1;
                 if (!((i==6 && j==20) || (i==12 && j==8) || (i==23 && j==18) || (i==2 && j==9) || (i==33 && j==7) || (i==7 && j==12) || (i==29 && j==14)|| (i==17 && j==21) || (i==21 && j==15) || (i==14 && j==14) || (i==17 && j==7) || (i==35 && j==21) || (i==23 && j==10) || (i==2 && j==16) || (i==32 && j==19) || (i>=33 && i<= 36 && j>= 11 && j<=14) || (i>=12 && i<= 15 && j>= 18 && j<=21) )){
-                        clearingSand(abuffer[3][0], abuffer[3][1]);
+                    clearingSand(abuffer[3][0], abuffer[3][1]);
                     abuffer[3][1] = abuffer[2][1];
                     abuffer[3][0] = abuffer[2][0];
                     abuffer[2][1] = abuffer[1][1];
@@ -680,7 +702,9 @@ void makingGrid2(){
             }else if ((i==19 && j==10) || (i==29 && j==18)){
                 drawImage(orb2.pixel_data, orb2.width, orb2.height, i*32+1, j*32+1);
             }else if ((i==36 && j==7)){
-                drawImage(orb3.pixel_data, orb3.width, orb3.height, i*32+1, j*32+1);     
+                drawImage(orb3.pixel_data, orb3.width, orb3.height, i*32+1, j*32+1);
+            }else if (i == stopWatchBuffer[0][0] && j == stopWatchBuffer[0][1]){
+                drawImage(stopWatch.pixel_data, stopWatch.width, stopWatch.height, i *32, j*32);
             }else{
                 clearingSand(i,j);
             }
@@ -721,6 +745,8 @@ void drawingAnaconda(int i, int j){
 
 void gameOver() {
     fillScreen(black);
+    drawImage(gameOverText.pixel_data, gameOverText.width, gameOverText.height, resolutionWidth/2 - gameOverText.width/2, resolutionHight/4);
+    drawImage(returnTextBlack.pixel_data, returnTextBlack.width, returnTextBlack.height, resolutionWidth/2 - returnTextBlack.width/2, 3 * resolutionHight/4);
     selected = 0;
 }
 
@@ -750,12 +776,11 @@ int main() {
 }   
 
 
-
 /*  
     Add eagle and Crocs  -> DONE
     Add orbs have a buffer for each of them -> DONE
-    Add superqualities to them -> Score increase, freeze time and lives     
-    Add eagle if eagle buffer is same as the buffer of snake (any postion) loose a live
+    Add superqualities to them -> Score increase, freeze time and lives  
+    Add eagle if eagle buffer is same as the buffe of snake (any postion) loose a live
     Make pond smaller by one pixel both sides
     Add a clock power up
     I wanna make the snake not goto the tile its body is on and the objects too
