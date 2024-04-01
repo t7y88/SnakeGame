@@ -85,6 +85,7 @@ int hearts = 3;
 int time = 99;
 int t = 0;
 int selected = 0;
+int orbScore = 0;
 
 void printf1(char *str) {
 	uart_puts(str);
@@ -200,11 +201,19 @@ void timer() {
         trackScore();
     }
     if (selected == 2) {
+        updateCorc(0);
+        updateCorc(1);
+        updateCorc(2);
+        updateCorc(3);
+        updateEagle(0);
+        updateEagle(1);
+        updateEagle(2);
+        updateEagle(3);
         if (time < 10) {
             drawRect(1153 - 64, 64, 1153, 64 + 128, darkBlue, 1);
         }
         drawNum(time, 1153, 64);
-        score = time * 10;
+        score = time * 10 + orbScore;
         if (score < 1000) {
             drawRect(0, 64, 0 + 64, 64 + 128, darkBlue, 1);
         }
@@ -433,6 +442,18 @@ void trackScore(){
 
 }
 
+void trackhearts(){
+    //drawRect(34 * 32, 12 * 32, 34 * 32 + heart.width * 5, 12 * 32 + heart.height, black, 1);
+    drawRect(512 - (5 - hearts) * 50, 142, 512, 192, darkBlue, 1);
+    for (int i = 0; i < hearts; i++){
+        drawImage(lives.pixel_data, lives.width, lives.height, 256 + 50 * i, 142);
+    }
+    if (hearts == 0){
+        gameOver();
+    }
+
+}
+
 void checkKeys(){
     for (int i=0; i<3; i++){
         if ((snakeBuffer[0] == keyBuffer[i][0]) && (snakeBuffer[1] == keyBuffer[i][1])){
@@ -580,21 +601,85 @@ void updateBomb(int n) {
 
 
 abuffer[4][2] = {{0,20}, {0,21},{0,22}, {0,23}};
-crocsBuffer[4][2] = {{0,18}, {3,9}, {14,15}, {18,21}};
-eagleBuffer[4][2] = {{7,12}, {17,8}, {23,11}, {33,8}};
+crocsBuffer[4][3] = {{0,8,1}, {0,13,1}, {15,14,1}, {18,21,1}};
+eagleBuffer[4][3] = {{7,12,1}, {14,8,1}, {23,11,1}, {29,8,0}};
 orb1buffer[2][2] = {{4,7}, {17,19}};
 orb2buffer[2][2] = {{19,10}, {29,18}};
 orb3buffer[1][2] = {{36,7}};
 stopWatchBuffer[1][2] = {{28, 9}};
 
-void challengeTwo(){
-    fillScreen(0x0);
-    makingGrid2();
-    drawImage(timerText.pixel_data, timerText.width, timerText.height, 1025, 0);
-    drawImage(scoreText.pixel_data, scoreText.width, scoreText.height, 0, 0);
-    time = 99;
-    int input;
-    abuffer[0][0] = 0; //starts at zero everytime
+void updateCorc(int n){
+    clearingSand(crocsBuffer[n][0], crocsBuffer[n][1]);
+    if ((crocsBuffer[n][0] == 11 && n == 0)||(crocsBuffer[n][0] == 32 && n == 1)||(crocsBuffer[n][0] == 28 && n == 2)||(crocsBuffer[n][0] == 34 && n == 3)){
+        crocsBuffer[n][2] = 0;
+    }
+    if ((crocsBuffer[n][0] == 0 && n == 0)||(crocsBuffer[n][0] == 0 && n == 1)||(crocsBuffer[n][0] == 15 && n == 2)||(crocsBuffer[n][0] == 18 && n == 3)){
+        crocsBuffer[n][2] = 1;
+    }
+    if (crocsBuffer[n][2] == 1){
+        crocsBuffer[n][0]++;
+    }else{
+        crocsBuffer[n][0]--;
+    }
+    for (int i = 0;i < 4; i++){
+        if (abuffer[i][0] == crocsBuffer[n][0] && abuffer[i][1] == crocsBuffer[n][1]){
+            hearts--;
+            trackhearts();
+            clearingAnaconda();
+            spawnSnake();
+        }
+    }
+    drawImage(crocs.pixel_data,crocs.width,crocs.height,crocsBuffer[n][0]*32 + 1,crocsBuffer[n][1]*32 + 1);
+}
+
+void checkOrb1(int n) {
+    if (abuffer[0][0] == orb1buffer[n][0] && abuffer[0][1] == orb1buffer[n][1]){
+        orb1buffer[n][0] = 0;
+        orb1buffer[n][1] = 0;
+        orbScore += 50;
+    }
+}
+void checkOrb2(int n) {
+    if (abuffer[0][0] == orb2buffer[n][0] && abuffer[0][1] == orb2buffer[n][1]){
+        orb2buffer[n][0] = 0;
+        orb2buffer[n][1] = 0;
+        orbScore += 100;
+    }
+}
+void checkOrb3(int n) {
+    if (abuffer[0][0] == orb3buffer[n][0] && abuffer[0][1] == orb3buffer[n][1]){
+        orb3buffer[n][0] = 0;
+        orb3buffer[n][1] = 0;
+        orbScore += 200;
+    }
+}
+
+void updateEagle(int n){
+    clearingSand(eagleBuffer[n][0], eagleBuffer[n][1]);
+    if ((eagleBuffer[n][1] == 23 && n == 0)||(eagleBuffer[n][1] == 13 && n == 1)||(eagleBuffer[n][1] == 23 && n == 2)||(eagleBuffer[n][1] == 13 && n == 3)){
+        eagleBuffer[n][2] = 0;
+    }
+    if ((eagleBuffer[n][1] == 6 && n == 0)||(eagleBuffer[n][1] == 6 && n == 1)||(eagleBuffer[n][1] == 12 && n == 2)||(eagleBuffer[n][1] == 6 && n == 3)){
+        eagleBuffer[n][2] = 1;
+    }
+    if (eagleBuffer[n][2] == 1){
+        eagleBuffer[n][1]++;
+    }else{
+        eagleBuffer[n][1]--;
+    }
+    for (int i = 0;i < 4; i++){
+        if (abuffer[i][0] == eagleBuffer[n][0] && abuffer[i][1] == eagleBuffer[n][1]){
+            hearts--;
+            trackhearts();
+            clearingAnaconda();
+            spawnSnake();
+        }
+    }
+    drawImage(eagle.pixel_data,eagle.width,eagle.height,eagleBuffer[n][0]*32 + 1,eagleBuffer[n][1]*32 + 1);
+}
+
+void spawnSnake(){
+    abuffer[0][0] = 0; 
     abuffer[1][0] = 0;
     abuffer[2][0] = 0;
     abuffer[3][0] = 0;
@@ -602,9 +687,37 @@ void challengeTwo(){
     abuffer[1][1] = 21;
     abuffer[2][1] = 22;
     abuffer[3][1] = 23;
+}
 
+void challengeTwo(){
+    hearts = 3;
+    orbScore = 0;
+    crocsBuffer[0][0] = 0;
+    crocsBuffer[1][0] = 0;
+    crocsBuffer[2][0] = 15;
+    crocsBuffer[3][0] = 18;
+    crocsBuffer[0][2] = 1;
+    crocsBuffer[1][2] = 1;
+    crocsBuffer[2][2] = 1;
+    crocsBuffer[3][2] = 1;
+    eagleBuffer[0][1] = 12;
+    eagleBuffer[1][1] = 8;
+    eagleBuffer[2][1] = 11;
+    eagleBuffer[3][1] = 8;
+    eagleBuffer[0][2] = 1;
+    eagleBuffer[1][2] = 1;
+    eagleBuffer[2][2] = 1;
+    eagleBuffer[3][2] = 1;
+    fillScreen(black);
+    makingGrid2();
+    drawRect(0, 0, 1280, 192, darkBlue, 1);
+    drawImage(timerText.pixel_data, timerText.width, timerText.height, 1025, 0);
+    drawImage(scoreText.pixel_data, scoreText.width, scoreText.height, 0, 0);
+    time = 99;
+    int input;
+    spawnSnake();
+    trackhearts();
     while(1){ 
-        
         input = READ_INPUT();
         if (input == 3){
             selected = 0;
@@ -678,6 +791,11 @@ void challengeTwo(){
                 }
             }
         }
+    checkOrb1(0);
+    checkOrb1(1);
+    checkOrb2(0);
+    checkOrb2(1);
+    checkOrb3(0);
     }
 }
 
@@ -717,8 +835,7 @@ void makingGrid2(){
     drawImage(pond.pixel_data, pond.width, pond.height, 12*32+1, 18*32+1);
 }
 void clearingSand(int i, int j){
-    drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0xFDFD96, 1);
-    drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0x0, 0);
+    drawRect(i*32 + 1, j*32+1, (i+1)*32-1, (j+1)*32 - 1, 0xFDFD96, 1);
 }
 
 void clearingAnaconda(){
