@@ -45,10 +45,16 @@
 #include <eagle.h>
 #include <crocs.h>
 #include <stopWatch.h>
+#include <doorOpened.h>
+#include <doorClosed.h>
 #include <head.h>
 #include <body.h>
 #include <arrow.h>
-
+#include <pauseText.h>
+#include <mainmenu.h>
+#include <restartText.h>
+#include <continueText.h>
+#include <authours.h>
 // Regesters
 #define CLO_REG 0xFE003004
 #define GPIO_BASE 0xFE200000 
@@ -72,7 +78,7 @@ static unsigned *gpio = (unsigned*)GPIO_BASE; // GPIO base
 #define sandColor 0xFDFD96
 
 // resolution 1920 × 1080
-#define resolutionWidth 1363
+#define resolutionWidth 1280
 #define resolutionHight 767
 
 // Setup global variables
@@ -89,6 +95,8 @@ int time = 99;
 int t = 0;
 int selected = 0;
 int orbScore = 0;
+int freezeTime = 0;
+int freezeTimeDuration = 0;
 int stop = 0;
 
 void printf1(char *str) {
@@ -206,69 +214,82 @@ void timer(int stop) {
             trackScore();
         }
         if (selected == 2) {
-            updateCorc(0);
-            updateCorc(1);
-            updateCorc(2);
-            updateCorc(3);
-            updateEagle(0);
-            updateEagle(1);
-            updateEagle(2);
-            updateEagle(3);
+            if (freezeTime == 0) {
+                updateCorc(0);
+                updateCorc(1);
+                updateCorc(2);
+                updateCorc(3);
+                updateEagle(0);
+                updateEagle(1);
+                updateEagle(2);
+                updateEagle(3);
+            }else {
+                freezeTimeDuration++;
+                if (freezeTimeDuration == 5){
+                    freezeTime = 0;
+                    freezeTimeDuration = 0;
+                }
+            }
             if (time < 10) {
                 drawRect(1153 - 64, 64, 1153, 64 + 128, darkBlue, 1);
             }
             drawNum(time, 1153, 64);
-            score = time * 10 + orbScore;
+            score = (time * 10) + orbScore + (hearts * 100);
             if (score < 1000) {
                 drawRect(0, 64, 0 + 64, 64 + 128, darkBlue, 1);
             }
             drawNum(score, 192, 64);
-        }
-    }else return;
+            trackhearts();
+            }
+        }else return;
 }
 
 // Menu snake location definition
-#define snakeXLeft resolutionWidth/4 - challenge1.width/2 - snakeHeadRight.width
-#define snakeXRight 3 * resolutionWidth/4 - challenge2.width/2 - snakeHeadRight.width
-#define snakeXMid resolutionWidth/2 - title.width/2 + title.width/3 - snakeHeadRight.width
-#define snakeYMid resolutionHight/2
+#define snakeYTop resolutionHight/2
+#define snakeYMid resolutionHight/2 + 100
 #define snakeYDown 3 * resolutionHight/4
-
+#define snakeXMid  resolutionWidth/2
 
 
 int mainMenu(){
 
     fillScreen(darkBlue);
 
-    drawImage(title.pixel_data, title.width, title.height, resolutionWidth/2 - title.width/2 - title.width/10, resolutionHight/4);
-    drawImage(challenge1.pixel_data, challenge1.width, challenge1.height, resolutionWidth/4 - challenge1.width/2, resolutionHight/2);
-    drawImage(challenge2.pixel_data, challenge2.width, challenge2.height, 3 * resolutionWidth/4 - challenge2.width/2, resolutionHight/2);
-    drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, snakeXLeft, snakeYMid);
-    drawImage(quit.pixel_data, quit.width, quit.height, resolutionWidth/2 - title.width/2 + title.width/3, 3 * resolutionHight/4);
-    int selected = 1;
+    drawImage(title.pixel_data, title.width, title.height, snakeXMid - title.width/2 + 50, resolutionHight/4);
+    drawImage(challenge1.pixel_data, challenge1.width, challenge1.height, snakeXMid, snakeYTop);
+    drawImage(challenge2.pixel_data, challenge2.width, challenge2.height, snakeXMid, snakeYMid);
+    drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, snakeXMid-snakeHeadRight.width, snakeYTop);
+    drawImage(quit.pixel_data, quit.width, quit.height, snakeXMid, snakeYDown);
+    drawImage(authours.pixel_data,authours.width,authours.height,resolutionWidth-authours.width,resolutionHight-authours.height);
+    int selected = 3;
     while(1){
         int input = READ_INPUT();
-        // move right
-        if (input == 8) {
-            drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, snakeXRight, snakeYMid);
-            drawRect(snakeXLeft, snakeYMid, snakeXLeft + snakeHeadRight.width, snakeYMid + snakeHeadRight.height, darkBlue, 1); //left
-            drawRect(snakeXMid, snakeYDown, snakeXMid + snakeHeadRight.width, snakeYDown + snakeHeadRight.height, darkBlue, 1); //down
-            selected = 2;
-        }
-        // move left
-        if (input == 7) {
-            drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, snakeXLeft, snakeYMid);
-            drawRect(snakeXMid, snakeYDown, snakeXMid + snakeHeadRight.width, snakeYDown + snakeHeadRight.height, darkBlue, 1); //down
-            drawRect(snakeXRight, snakeYMid, snakeXRight + snakeHeadRight.width, snakeYMid + snakeHeadRight.height, darkBlue, 1); //right
-            selected = 1;
+        // move up
+        if (input == 5) {
+            if (selected < 3)
+            selected++;
         }
         //move down
         if (input == 6) {
-            drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, snakeXMid, snakeYDown);
-            drawRect(snakeXLeft, snakeYMid, snakeXLeft + snakeHeadRight.width, snakeYMid + snakeHeadRight.height, darkBlue, 1); //left
-            drawRect(snakeXRight, snakeYMid, snakeXRight + snakeHeadRight.width, snakeYMid + snakeHeadRight.height, darkBlue, 1); //right
-            selected = 3;
+            if (selected > 1)
+            selected--;
         }
+        if (selected == 3) {
+            drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, snakeXMid-snakeHeadRight.width, snakeYTop);
+            drawRect(snakeXMid-snakeHeadRight.width, snakeYMid, snakeXMid, snakeYMid + snakeHeadRight.height,darkBlue,1);//mid
+            drawRect(snakeXMid-snakeHeadRight.width, snakeYDown, snakeXMid, snakeYDown + snakeHeadRight.height,darkBlue,1);//down
+        }
+        if (selected == 2) {
+            drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, snakeXMid-snakeHeadRight.width, snakeYMid);
+            drawRect(snakeXMid-snakeHeadRight.width, snakeYTop, snakeXMid, snakeYTop + snakeHeadRight.height,darkBlue,1);//Top
+            drawRect(snakeXMid-snakeHeadRight.width, snakeYDown, snakeXMid, snakeYDown + snakeHeadRight.height,darkBlue,1);//down
+        }
+        if (selected == 1) {
+            drawImage(snakeHeadRight.pixel_data, snakeHeadRight.width, snakeHeadRight.height, snakeXMid-snakeHeadRight.width, snakeYDown);
+            drawRect(snakeXMid-snakeHeadRight.width, snakeYTop, snakeXMid, snakeYTop + snakeHeadRight.height,darkBlue,1);//Top
+            drawRect(snakeXMid-snakeHeadRight.width, snakeYMid, snakeXMid, snakeYMid + snakeHeadRight.height,darkBlue,1);//mid
+        }
+
         if (input == 9) {
             return selected;
         }
@@ -277,6 +298,7 @@ int mainMenu(){
 }
 
 void reInitilizing(){
+    // reinitilizing values
     keys = 0;
     hearts = 3;
     snakeBuffer[0] = 1;
@@ -301,12 +323,9 @@ void reInitilizing(){
     drawImage(scoreText.pixel_data, scoreText.width, scoreText.height, 1025,566);
     trackScore();
 }
-
 void challengeOne(){
-    // reinitilizing values
     reInitilizing();
     int input;
-
     while(1){ 
         
         input = READ_INPUT();
@@ -359,28 +378,40 @@ void challengeOne(){
                 }
 
             }
+    // B Y SL ST UP DOWN LEFT RIGHT A  X  L  R
+    // 1 2 3  4  5  6    7    8     9 10 11 12
         }else if (input==4){
             stop = 1;
             int arrowAt=0;
             int input2;
-            drawRect(8*32, 8*32, 32*32, 20*32, 0x0, 1);
-            // draw Pause 
+            drawRect(8*32, 8*32, 32*32, 20*32, darkBlue, 1);
+            drawImage(pauseText.pixel_data,pauseText.width,pauseText.height,18*32,9*32);
+            drawImage(continueText.pixel_data,continueText.width,mainmenu.height,12*32,12*32);
+            drawImage(restartText.pixel_data,restartText.width,restartText.height,24*32,12*32);
+            drawImage(mainmenu.pixel_data,mainmenu.width,mainmenu.height,18*32,16*32);
+            
             //draw Restart at 9,13
-            drawImage(arrow.pixel_data, arrow.width, arrow.height, 9*32, 12*32);
+            drawImage(arrow.pixel_data, arrow.width, arrow.height, 11*32, 12*32);
             //draw mainMenu at 12,13
             while (stop == 1){
                 input2 = READ_INPUT();
                 if (input2 == 4){
                     stop = 0;
-                }else if(input2 == 8){
-                    drawImage(arrow.pixel_data, arrow.width, arrow.height, 12*32, 16*32);
-                    arrowAt = 1;
                 }else if (input2 ==7){
-                    drawImage(arrow.pixel_data, arrow.width, arrow.height, 9*32, 16*32);
+                    drawImage(arrow.pixel_data, arrow.width, arrow.height, 11*32, 12*32);
                     arrowAt = 0;
+                    drawRect(23*32,12*32,24*32,13*32,darkBlue,1);//right
+                    drawRect(17*32,16*32,18*32,17*32,darkBlue,1);//down
+                }else if(input2 == 8){
+                    drawImage(arrow.pixel_data, arrow.width, arrow.height, 23*32, 12*32);
+                    arrowAt = 1;
+                    drawRect(11*32,12*32,12*32,13*32,darkBlue,1);//left
+                    drawRect(17*32,16*32,18*32,17*32,darkBlue,1);//down
                 }else if (input2 ==6){
-                    drawImage(arrow.pixel_data, arrow.width, arrow.height, 9*32, 16*32);
+                    drawImage(arrow.pixel_data, arrow.width, arrow.height, 17*32, 16*32);
                     arrowAt = 2;
+                    drawRect(23*32,12*32,24*32,13*32,darkBlue,1);//right
+                    drawRect(11*32,12*32,12*32,13*32,darkBlue,1);//left
                 }else if (input2 ==9){
                     stop = 0;
                     if (arrowAt==2){
@@ -388,13 +419,18 @@ void challengeOne(){
                     }else if (arrowAt==1){
                         reInitilizing(); 
                         makingGrid();            
+                    }else if (arrowAt==0){
+                        drawRect(0*32, 0*32, 32*32, 24*32, black, 1);
+                        makingGrid();   
                     }
+
                 }
             }
         }
         checkKeys();
         checkHearts();
         checkVictory();
+
     }
 }
 void spawnHearts() {
@@ -473,6 +509,9 @@ void trackScore(){
     for (int i = 0; i < keys; i++){
         drawImage(menuKey.pixel_data, menuKey.width, menuKey.height, 1025 + 85 * i, 284);
     }
+    if (keys == 3) {
+        drawImage(doorOpened.pixel_data,doorOpened.width,doorOpened.height,30 * 32,22 * 32);
+    }
     drawRect(1275 - (5 - hearts) * 50, 457, 1275, 507, darkBlue, 1);
     for (int i = 0; i < hearts; i++){
         drawImage(lives.pixel_data, lives.width, lives.height, 1025 + 50 * i, 457);
@@ -520,14 +559,8 @@ void checkHearts(){
 }
 
 void checkVictory(){
-    if ((snakeBuffer[0] == 30) && (snakeBuffer[1] == 22)){
-        fillScreen(darkBlue);
-        drawImage(victoryText.pixel_data,victoryText.width,victoryText.height,resolutionWidth/2 - victoryText.width/2, resolutionHight/4);
-        drawImage(scoreText.pixel_data,scoreText.width, scoreText.height, resolutionWidth/2 - scoreText.width, resolutionHight/2);
-        drawImage(returnText.pixel_data,returnText.width, returnText.height, resolutionWidth/2 - returnText.width/2, 3 * resolutionHight/4);
-        int score = time * 10 + hearts * 100;
-        drawNum(score, resolutionWidth/2 + (64 * 4), resolutionHight/2);
-        selected = 0;   
+    if ((snakeBuffer[0] == 30) && (snakeBuffer[1] == 22)){ 
+        victory();
     } 
 }
 
@@ -548,7 +581,7 @@ void makingGrid(){
                 drawRect(i*32, j*32, (i+1)*32, (j+1)*32, 0x964B00, 1);
             }
             //drawing the Snake head
-            if(i==1 && j==1){
+            if(i==snakeBuffer[0] && j==snakeBuffer[1]){
                 drawingSnake(i, j);
             }
             if (i==6 && j==2){
@@ -559,13 +592,13 @@ void makingGrid(){
                 spawnBomb(i ,j, 2, 1, 3, 3);
             }
             // making keys
-            if ((i==23 && j==2) || (i==3 && j==20) || (i==2 && j==8) ){
+            if ((i==keyBuffer[0][0] && j==keyBuffer[0][1]) || (i==keyBuffer[1][0] && j==keyBuffer[1][1]) || (i==keyBuffer[2][0] && j==keyBuffer[2][1]) ){
                 drawImage(key.pixel_data, key.width, key.height, i*32, j*32);
                 //**Update Key Buffer
             }
             //highlighting finish
             if ((i==30 && j==22)){
-                drawRect(i*32+1, j*32+1, (i+1)*32-1, (j+1)*32-1, 0xFF00, 1);
+                drawImage(doorClosed.pixel_data,doorClosed.width,doorClosed.height,i * 32,j * 32);
             }
             // make grid for the rest of the space
             else{
@@ -665,7 +698,6 @@ void updateCorc(int n){
     for (int i = 0;i < 4; i++){
         if (abuffer[i][0] == crocsBuffer[n][0] && abuffer[i][1] == crocsBuffer[n][1]){
             hearts--;
-            trackhearts();
             clearingAnaconda();
             spawnSnake();
         }
@@ -695,6 +727,12 @@ void checkOrb3(int n) {
     }
 }
 
+void checkStopwatch(int n){
+    if (abuffer[0][0] == stopWatchBuffer[n][0] && abuffer[0][1] == stopWatchBuffer[n][1]){
+        freezeTime = 1;
+    }
+}
+
 void updateEagle(int n){
     clearingSand(eagleBuffer[n][0], eagleBuffer[n][1]);
     if ((eagleBuffer[n][1] == 23 && n == 0)||(eagleBuffer[n][1] == 13 && n == 1)||(eagleBuffer[n][1] == 23 && n == 2)||(eagleBuffer[n][1] == 13 && n == 3)){
@@ -711,7 +749,6 @@ void updateEagle(int n){
     for (int i = 0;i < 4; i++){
         if (abuffer[i][0] == eagleBuffer[n][0] && abuffer[i][1] == eagleBuffer[n][1]){
             hearts--;
-            trackhearts();
             clearingAnaconda();
             spawnSnake();
         }
@@ -730,8 +767,7 @@ void spawnSnake(){
     abuffer[3][1] = 23;
     drawingAnaconda(0,20);
 }
-
-void challengeTwo(){
+void reinitilizing2(){
     hearts = 3;
     orbScore = 0;
     crocsBuffer[0][0] = 0;
@@ -750,17 +786,24 @@ void challengeTwo(){
     eagleBuffer[1][2] = 1;
     eagleBuffer[2][2] = 1;
     eagleBuffer[3][2] = 1;
+    spawnSnake();
     fillScreen(black);
     makingGrid2();
     drawRect(0, 0, 1280, 192, darkBlue, 1);
     drawImage(timerText.pixel_data, timerText.width, timerText.height, 1025, 0);
     drawImage(scoreText.pixel_data, scoreText.width, scoreText.height, 0, 0);
+    drawImage(livesText.pixel_data, livesText.width, livesText.height, 256, 0);
     time = 99;
-    int input;
-    spawnSnake();
     trackhearts();
+}
+void challengeTwo(){
+    int input;
+    reinitilizing2();
     while(1){ 
         input = READ_INPUT();
+        if (selected == 0){
+            return;
+        }
         if (input == 3){
             selected = 0;
             return;
@@ -832,12 +875,63 @@ void challengeTwo(){
                     drawingAnaconda(i,j);
                 }
             }
+        }else if (input==4){
+            stop = 1;
+            int arrowAt=0;
+            int input2;
+            drawRect(8*32, 8*32, 32*32, 20*32, darkBlue, 1);
+            drawImage(pauseText.pixel_data,pauseText.width,pauseText.height,18*32,9*32);
+            drawImage(continueText.pixel_data,continueText.width,mainmenu.height,12*32,12*32);
+            drawImage(restartText.pixel_data,restartText.width,restartText.height,24*32,12*32);
+            drawImage(mainmenu.pixel_data,mainmenu.width,mainmenu.height,18*32,16*32);
+            
+            //draw Restart at 9,13
+            drawImage(arrow.pixel_data, arrow.width, arrow.height, 11*32, 12*32);
+            //draw mainMenu at 12,13
+            while (stop == 1){
+                input2 = READ_INPUT();
+                if (input2 == 4){
+                    stop = 0;
+                }else if (input2 ==7){
+                    drawImage(arrow.pixel_data, arrow.width, arrow.height, 11*32, 12*32);
+                    arrowAt = 0;
+                    drawRect(23*32,12*32,24*32,13*32,darkBlue,1);//right
+                    drawRect(17*32,16*32,18*32,17*32,darkBlue,1);//down
+                }else if(input2 == 8){
+                    drawImage(arrow.pixel_data, arrow.width, arrow.height, 23*32, 12*32);
+                    arrowAt = 1;
+                    drawRect(11*32,12*32,12*32,13*32,darkBlue,1);//left
+                    drawRect(17*32,16*32,18*32,17*32,darkBlue,1);//down
+                }else if (input2 ==6){
+                    drawImage(arrow.pixel_data, arrow.width, arrow.height, 17*32, 16*32);
+                    arrowAt = 2;
+                    drawRect(23*32,12*32,24*32,13*32,darkBlue,1);//right
+                    drawRect(11*32,12*32,12*32,13*32,darkBlue,1);//left
+                }else if (input2 ==9){
+                    stop = 0;
+                    if (arrowAt==2){
+                        selected = 0;
+                    }else if (arrowAt==1){
+                        reinitilizing2(); 
+                        makingGrid2();            
+                    }else if (arrowAt==0){
+                        drawRect(0, 6*32, 1280, 767, sandColor, 1);
+                        makingGrid2();  
+                    }
+
+
+                }
+            }
         }
     checkOrb1(0);
     checkOrb1(1);
     checkOrb2(0);
     checkOrb2(1);
     checkOrb3(0);
+    checkStopwatch(0);
+    if (abuffer[0][0] == 39 && abuffer[0][1] == 6) {
+        victory();
+    }
     }
 }
 
@@ -865,6 +959,8 @@ void makingGrid2(){
                 drawImage(orb3.pixel_data, orb3.width, orb3.height, i*32+1, j*32+1);
             }else if (i == stopWatchBuffer[0][0] && j == stopWatchBuffer[0][1]){
                 drawImage(stopWatch.pixel_data, stopWatch.width, stopWatch.height, i *32, j*32);
+            }else if (i == 39 && j == 6){
+                drawImage(doorOpened.pixel_data, doorOpened.width, doorOpened.height, i *32, j*32);
             }else{
                 clearingSand(i,j);
             }
@@ -909,6 +1005,16 @@ void gameOver() {
     selected = 0;
 }
 
+void victory() {
+    fillScreen(darkBlue);
+    drawImage(victoryText.pixel_data,victoryText.width,victoryText.height,resolutionWidth/2 - victoryText.width/2, resolutionHight/4);
+    drawImage(scoreText.pixel_data,scoreText.width, scoreText.height, resolutionWidth/2 - scoreText.width, resolutionHight/2);
+    drawImage(returnText.pixel_data,returnText.width, returnText.height, resolutionWidth/2 - returnText.width/2, 3 * resolutionHight/4);
+    int score = time * 10 + hearts * 100;
+    drawNum(score, resolutionWidth/2 + (64 * 4), resolutionHight/2);
+    selected = 0;  
+}
+
 int main() {   
     // You can use framebuffer, width, height and pitch variables available in framebuffer.h
     // Draw a (Green) pixel at coordinates (10,10)
@@ -920,15 +1026,15 @@ int main() {
     Init_GPIO();
     while(1){
         selected = mainMenu();
-        if (selected == 1){
+        if (selected == 3){
            challengeOne();
         }
         if (selected ==2){
             challengeTwo();
         }
-        if (selected == 3) {
-            fillScreen(0x0);
-            break;
+        if (selected == 1) {
+                fillScreen(0x0);
+                break;
         }
     }
     return 0;
