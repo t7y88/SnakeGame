@@ -45,6 +45,9 @@
 #include <eagle.h>
 #include <crocs.h>
 #include <stopWatch.h>
+#include <head.h>
+#include <body.h>
+#include <arrow.h>
 
 // Regesters
 #define CLO_REG 0xFE003004
@@ -86,6 +89,7 @@ int time = 99;
 int t = 0;
 int selected = 0;
 int orbScore = 0;
+int stop = 0;
 
 void printf1(char *str) {
 	uart_puts(str);
@@ -161,7 +165,7 @@ int READ_INPUT(){
         pressed = READ_SNES();
         t++;
         if (t == 3000){
-            timer();
+            timer(stop);
             t = 0;
         }
         //drawRect(timer, timer, (timer+1)*32, (timer+1)*32, 0xFFFFFF, 1);
@@ -170,56 +174,57 @@ int READ_INPUT(){
         release = READ_SNES();
         t++;
         if (t == 3000){
-            timer();
+            timer(stop);
             t = 0;
         }
     }
     return pressed;
 }
 
-void timer() {
-    int score;
-    if (selected == 0) return;
-    time--;
-    if (time == 0){
-        gameOver();
-    } 
-    if (selected == 1) {
-        updateBomb(0);
-        updateBomb(1);
-        updateBomb(2);
-        spawnHearts();
-        score = time * 10 + hearts * 100;
-        if (score < 1000) {
-            drawRect(1025, 639, 1025 + 64, 639 + 128, darkBlue, 1);
+void timer(int stop) {
+    if(stop == 0){
+        int score;
+        if (selected == 0) return;
+        time--;
+        if (time == 0){
+            gameOver();
+        } 
+        if (selected == 1) {
+            updateBomb(0);
+            updateBomb(1);
+            updateBomb(2);
+            spawnHearts();
+            score = time * 10 + hearts * 100;
+            if (score < 1000) {
+                drawRect(1025, 639, 1025 + 64, 639 + 128, darkBlue, 1);
+            }
+            drawNum(score, 1217, 639);
+            if (time < 10) {
+                drawRect(1153 - 64, 71, 1153, 71 + 128, darkBlue, 1);
+            }
+            drawNum(time, 1153, 71);
+            trackScore();
         }
-        drawNum(score, 1217, 639);
-        if (time < 10) {
-            drawRect(1153 - 64, 71, 1153, 71 + 128, darkBlue, 1);
+        if (selected == 2) {
+            updateCorc(0);
+            updateCorc(1);
+            updateCorc(2);
+            updateCorc(3);
+            updateEagle(0);
+            updateEagle(1);
+            updateEagle(2);
+            updateEagle(3);
+            if (time < 10) {
+                drawRect(1153 - 64, 64, 1153, 64 + 128, darkBlue, 1);
+            }
+            drawNum(time, 1153, 64);
+            score = time * 10 + orbScore;
+            if (score < 1000) {
+                drawRect(0, 64, 0 + 64, 64 + 128, darkBlue, 1);
+            }
+            drawNum(score, 192, 64);
         }
-        drawNum(time, 1153, 71);
-        trackScore();
-    }
-    if (selected == 2) {
-        updateCorc(0);
-        updateCorc(1);
-        updateCorc(2);
-        updateCorc(3);
-        updateEagle(0);
-        updateEagle(1);
-        updateEagle(2);
-        updateEagle(3);
-        if (time < 10) {
-            drawRect(1153 - 64, 64, 1153, 64 + 128, darkBlue, 1);
-        }
-        drawNum(time, 1153, 64);
-        score = time * 10 + orbScore;
-        if (score < 1000) {
-            drawRect(0, 64, 0 + 64, 64 + 128, darkBlue, 1);
-        }
-        drawNum(score, 192, 64);
-
-    }
+    }else return;
 }
 
 // Menu snake location definition
@@ -271,8 +276,7 @@ int mainMenu(){
     
 }
 
-void challengeOne(){
-    // reinitilizing values
+void reInitilizing(){
     keys = 0;
     hearts = 3;
     snakeBuffer[0] = 1;
@@ -288,7 +292,6 @@ void challengeOne(){
     keyBuffer[2][0] = 3;
     keyBuffer[2][1] = 20;
     time = 99;
-    int input;
     fillScreen(0x0);
     makingGrid();
     drawRect(1025, 0, 1280, 767, darkBlue, 1);
@@ -297,6 +300,13 @@ void challengeOne(){
     drawImage(livesText.pixel_data, livesText.width, livesText.height, 1025, 384); // sprite height of 73
     drawImage(scoreText.pixel_data, scoreText.width, scoreText.height, 1025,566);
     trackScore();
+}
+
+void challengeOne(){
+    // reinitilizing values
+    reInitilizing();
+    int input;
+
     while(1){ 
         
         input = READ_INPUT();
@@ -349,11 +359,42 @@ void challengeOne(){
                 }
 
             }
+        }else if (input==4){
+            stop = 1;
+            int arrowAt=0;
+            int input2;
+            drawRect(8*32, 8*32, 32*32, 20*32, 0x0, 1);
+            // draw Pause 
+            //draw Restart at 9,13
+            drawImage(arrow.pixel_data, arrow.width, arrow.height, 9*32, 12*32);
+            //draw mainMenu at 12,13
+            while (stop == 1){
+                input2 = READ_INPUT();
+                if (input2 == 4){
+                    stop = 0;
+                }else if(input2 == 8){
+                    drawImage(arrow.pixel_data, arrow.width, arrow.height, 12*32, 16*32);
+                    arrowAt = 1;
+                }else if (input2 ==7){
+                    drawImage(arrow.pixel_data, arrow.width, arrow.height, 9*32, 16*32);
+                    arrowAt = 0;
+                }else if (input2 ==6){
+                    drawImage(arrow.pixel_data, arrow.width, arrow.height, 9*32, 16*32);
+                    arrowAt = 2;
+                }else if (input2 ==9){
+                    stop = 0;
+                    if (arrowAt==2){
+                        selected = 0;
+                    }else if (arrowAt==1){
+                        reInitilizing(); 
+                        makingGrid();            
+                    }
+                }
+            }
         }
         checkKeys();
         checkHearts();
         checkVictory();
-
     }
 }
 void spawnHearts() {
@@ -687,6 +728,7 @@ void spawnSnake(){
     abuffer[1][1] = 21;
     abuffer[2][1] = 22;
     abuffer[3][1] = 23;
+    drawingAnaconda(0,20);
 }
 
 void challengeTwo(){
@@ -852,10 +894,10 @@ void clearingAnaconda(){
 void drawingAnaconda(int i, int j){
 
     if (i == abuffer[0][0] && j == abuffer[0][1]){
-        drawRect((abuffer[0][0])*32, (abuffer[0][1])*32, ((abuffer[0][0])+1)*32, ((abuffer[0][1])+1)*32, 0x0, 1);
-        drawRect((abuffer[1][0])*32, (abuffer[1][1])*32, ((abuffer[1][0])+1)*32, ((abuffer[1][1])+1)*32, 0x0, 1);
-        drawRect((abuffer[2][0])*32, (abuffer[2][1])*32, ((abuffer[2][0])+1)*32, ((abuffer[2][1])+1)*32, 0x0, 1);
-        drawRect((abuffer[3][0])*32, (abuffer[3][1])*32, ((abuffer[3][0])+1)*32, ((abuffer[3][1])+1)*32, 0x0, 1);
+        drawImage(head.pixel_data, head.width, head.height, (abuffer[0][0])*32+1, (abuffer[0][1])*32+1);
+        drawImage(body.pixel_data, body.width, body.height, (abuffer[1][0])*32+1, (abuffer[1][1])*32+1);
+        drawImage(body.pixel_data, body.width, body.height, (abuffer[2][0])*32+1, (abuffer[2][1])*32+1);
+        drawImage(body.pixel_data, body.width, body.height, (abuffer[3][0])*32+1, (abuffer[3][1])*32+1);
     }
 }
 
