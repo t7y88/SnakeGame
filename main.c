@@ -197,7 +197,7 @@ void timer(int stop) {
         if (time == 0){
             gameOver();
         } 
-        if (selected == 1) {
+        if (selected == 3) {
             updateBomb(0);
             updateBomb(1);
             updateBomb(2);
